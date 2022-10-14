@@ -1,0 +1,6 @@
+# Eclipse stuff
+.project
+.settings/
+
+# Binaries
+bin/
