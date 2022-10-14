@@ -1,4 +1,5 @@
-# Generic stuff, ignore please
+# See Rules.mk for the actual Makefile
+
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 _mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 I := $(patsubst %/,%,$(dir $(_mkfile_path)))
@@ -19,52 +20,6 @@ C = $(words $N)$(eval N := x $N)
 ECHO = echo [$C/$T]
 endif
 
-BUILD_DIR ?= bin
-SOURCE_DIR := src
-TARGET_EXEC := comp.exe
+include Rules.mk
 
-CC := gcc
-
-CONFIG ?= Release
-
-# Release config
-ifeq ($(CONFIG),Release)
-CFLAGS ?= -m64 -std=c17 -flto -Ofast -ffunction-sections -fdata-sections
-LDFLAGS ?= -m64 -flto -Ofast -s -Wl,--gc-sections,--as-needed
-else ifeq ($(CONFIG),Debug) # Debug
-CFLAGS ?= -m64 -std=c17 -Og -ggdb
-LDFLAGS ?= -m64 -Og -ggdb
 endif
-
-BUILD_DIRS ?= $(sort $(dir $(OBJ)))
-SRC := $(call rwildcard,$(SOURCE_DIR),*.c)
-OBJ := $(SRC:%=$(BUILD_DIR)/%.obj)
-include $(OBJ:%=%.dep)
-
-all: $(BUILD_DIR)/$(TARGET_EXEC)
-
-$(BUILD_DIR)/$(TARGET_EXEC): $(BUILD_DIR) $(OBJ)
-	@$(ECHO) Linking $<
-	@$(CC) $(OBJ) $(LDFLAGS) -o $@
-
-$(BUILD_DIR)/%.c.obj: %.c
-	@$(ECHO) Building $<
-	@$(CC) $(CFLAGS) -MD -MF $@.dep -c $< -o $@
-
-#$(BUILD_DIR)/%.dep: $(basename $(BUILD_DIR)/%.dep).c.obj
-
-clean:
-ifeq ($(OS), Windows_NT)
-	@rmdir /S /Q $(BUILD_DIR)
-else
-	@rm -rf $(BUILD_DIR)
-endif
-
-$(BUILD_DIR):
-ifeq ($(OS), Windows_NT)
-	@mkdir $(subst /,\,$(BUILD_DIRS))
-else
-	@mkdir -p $(BUILD_DIRS)
-endif
-
-endif # This is not a mistake, its intentional
