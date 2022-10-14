@@ -39,7 +39,7 @@ endif
 BUILD_DIRS ?= $(sort $(dir $(OBJ)))
 SRC := $(call rwildcard,$(SOURCE_DIR),*.c)
 OBJ := $(SRC:%=$(BUILD_DIR)/%.obj)
--include $(OBJ:%=$(BUILD_DIR)/%.dep)
+include $(OBJ:%=%.dep)
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
@@ -50,6 +50,8 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(BUILD_DIR) $(OBJ)
 $(BUILD_DIR)/%.c.obj: %.c
 	@$(ECHO) Building $<
 	@$(CC) $(CFLAGS) -MD -MF $@.dep -c $< -o $@
+
+#$(BUILD_DIR)/%.dep: $(basename $(BUILD_DIR)/%.dep).c.obj
 
 clean:
 ifeq ($(OS), Windows_NT)
