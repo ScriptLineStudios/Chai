@@ -8,45 +8,34 @@ typedef struct {
 } String;
 int x = 0;
 
-static char* concat(const char *s1, const char *s2)
-{
-    char *result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
-    // in real code you would check for errors in malloc here
-    strcpy(result, s1);
-    strcat(result, s2);
-    return result;
-}
-
-static char *parse_identifier(char *line, int start, int *end) {
+static char *parse_identifier(char *line, int start, int *end, char *res) {
 	int i = 0;
 
 	for (i = start; i < strlen(line); i++) {
         if (isalnum(line[i])) {
-			printf("CHAR = %c\n", line[i]);
+			strncat(res, &line[i], 1);
         } else {
-			printf("ENDING...\n");
             break;
         }
 	}
 
 	*end = i;
-	return "IDENTIFIER";
+	return (char *)&res[0];
 }
 
-
-static char *parse_integer(char *line, int start, int *end) {
+static char *parse_integer(char *line, int start, int *end, char *res) {
 	int i = 0;
 
 	for (i = start; i < strlen(line); i++) {
         if (isdigit(line[i])) {
-            //result += c;
+			strncat(res, &line[i], 1);
         } else {
             break;
         }
 	}
 
 	*end = i;
-	return "INTEGER";
+	return (char *)&res[0];
 }
 
 int main(int argc, char *argv[]) {
@@ -103,13 +92,15 @@ int main(int argc, char *argv[]) {
 			case '7':
 			case '8':
 			case '9': 
-				token.str = parse_integer(line, col, &skip);
+				char *_res = malloc(sizeof(char) * 100);
+				token.str = parse_integer(line, col, &skip, _res);
 				tokens[x] = token;
 				x++;
 				skip -= col;
 				break;
 			default: 
-				token.str = parse_identifier(line, col, &skip);
+				char *res = malloc(sizeof(char) * 100);
+				token.str = parse_identifier(line, col, &skip, res);
 				tokens[x] = token;
 				x++;
 				skip -= col;
