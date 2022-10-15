@@ -1,2 +1,1 @@
-let hello = 10;
-let yo = 10;
+10 + 1
