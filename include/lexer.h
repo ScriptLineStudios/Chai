@@ -1,0 +1,4 @@
+#ifdef LEXER
+#define
+
+#endif
