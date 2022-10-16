@@ -68,14 +68,12 @@ void *factor(String *tokens) {
 void *term(String *tokens) {
     void *left = factor(tokens);
 
-    if (current_token.str != NULL) {
-        while (strcmp(current_token.str, "*") == 0 || strcmp(current_token.str, "/") == 0) {
-            String op = current_token;
-            advance_symbol(tokens);
+    while (current_token.str != NULL && (strcmp(current_token.str, "*") == 0 || strcmp(current_token.str, "/") == 0)) {
+        String op = current_token;
+        advance_symbol(tokens);
 
-            void *right = factor(tokens);
-            left = create_bin_op_node(left, op, right);
-        }
+        void *right = factor(tokens);
+        left = create_bin_op_node(left, op, right);
     }
     return left;
 }
@@ -94,11 +92,20 @@ void *expression(String *tokens) {
 
 void generate_ast(String *tokens) {
     advance_symbol(tokens);
-    void *left = expression(tokens);
-    BinOp *bin_op = (BinOp *)left; 
+    void *node = expression(tokens);
+    BinOp *bin_op = (BinOp *)node; 
     Number *bin_op_left = (Number *)bin_op->left;
-    Number *bin_op_right = (Number *)bin_op->right;
-    printf("Node left = %d\n", bin_op_left->value);
-    printf("Node right = %d\n", bin_op_right->value);
+    BinOp *bin_op_right = (BinOp *)bin_op->right;
+    String left_op = (String)bin_op->op;
 
+
+    Number *bin_op_right_left  = (Number *)bin_op_right->left;
+    String right_op = (String)bin_op_right->op;
+    Number *bin_op_right_right = (Number *)bin_op_right->right;
+
+    printf("Node left = %d\n", bin_op_left->value);
+    printf("Node op = %s\n", left_op.str);
+    printf("Node right left = %d\n", bin_op_right_left->value);
+    printf("Node op = %s\n", right_op.str);
+    printf("Node right right = %d\n", bin_op_right_right->value);
 }
