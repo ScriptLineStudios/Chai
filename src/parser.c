@@ -169,11 +169,10 @@ void visit_binop(NodeReturn node) {
     printf(")");
 }
 
-
 void visit_var_assign_node(NodeReturn node) {
-    printf("VAR ASSIGN: ");
     VarAssign *var = (VarAssign *)node.node;
     NodeReturn expr = var->expression;
+    printf("VAR ASSIGN: ", var->var_name);
 
     if (expr.node_type == BINOP) {
         visit_binop(expr);
@@ -183,8 +182,7 @@ void visit_var_assign_node(NodeReturn node) {
     }
 }
 
-
-void generate_ast(String *tokens) {
+void generate_and_visit_node(String *tokens) {
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
 
@@ -201,4 +199,8 @@ void generate_ast(String *tokens) {
         printf("Unknown type: %d\n", node.node_type);
     }
     printf("\n");
+}
+
+void generate_ast(String *tokens) {
+    generate_and_visit_node(tokens);
 }
