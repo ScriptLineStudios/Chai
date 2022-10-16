@@ -16,32 +16,40 @@ typedef enum {
 String current_token;
 
 typedef struct {
-    void *left;
+    void *node;
+    NodeType node_type;
+} NodeReturn;
+
+typedef struct {
+    NodeReturn left;
     String op;
-    void *right;
+    NodeReturn right;
 } BinOp;
 
 typedef struct {
     int value;
 } Number;
 
-typedef struct {
-    void *node;
-    NodeType node_type;
-} NodeReturn;
-
 void advance_symbol(String *tokens) {
     token_index += 1;
     current_token = tokens[token_index];
 }
 
-void *create_bin_op_node(void *left, String op, void *right) {
+NodeReturn return_node(void *node, NodeType node_type) {
+    NodeReturn ret;
+    ret.node = node;
+    ret.node_type = node_type;
+
+    return ret;
+}
+
+NodeReturn create_bin_op_node(NodeReturn left, String op, NodeReturn right) {
     BinOp *result = (BinOp*)malloc(sizeof(BinOp));
 
     result->left = left;
     result->op = op;
     result->right = right;
-    return result;
+    return return_node((void *)result, BINOP);
 }
 
 int isnumber(char *input) {
@@ -51,14 +59,6 @@ int isnumber(char *input) {
         return 0;
     }
     return 1;
-}
-
-NodeReturn return_node(void *node, NodeType node_type) {
-    NodeReturn ret;
-    ret.node = node;
-    ret.node_type = node_type;
-
-    return ret;
 }
 
 NodeReturn factor(String *tokens) {
@@ -74,45 +74,73 @@ NodeReturn factor(String *tokens) {
 }
 
 NodeReturn term(String *tokens) {
-    NodeReturn _left = factor(tokens);
-    void *left = _left.node;
+    NodeReturn left = factor(tokens);
 
     while (current_token.str != NULL && (strcmp(current_token.str, "*") == 0 || strcmp(current_token.str, "/") == 0)) {
         String op = current_token;
         advance_symbol(tokens);
 
-        NodeReturn _right = factor(tokens);
-        void *right = _right.node;
-        
+        NodeReturn right = factor(tokens);
+
         left = create_bin_op_node(left, op, right);
     }
-    return return_node(left, BINOP);
+    return left;
 }
 
 NodeReturn expression(String *tokens) {
-    NodeReturn _left = factor(tokens);
-    void *left = _left.node;
+    NodeReturn left = term(tokens);
 
     while (current_token.str != NULL && (strcmp(current_token.str, "+") == 0 || strcmp(current_token.str, "-") == 0)) {
         String op = current_token;
         advance_symbol(tokens);
 
-        NodeReturn _right = factor(tokens);
-        void *right = _right.node;
+        NodeReturn right = term(tokens);
 
         left = create_bin_op_node(left, op, right);
     }
-    return return_node(left, BINOP);
+    return left;
+}
+ 
+void vist_number(NodeReturn node) {
+    Number *number = (Number *)node.node;
+    printf("%d", number->value);
+}
+
+void vist_binop(NodeReturn node) {
+    printf("(");
+    BinOp *bin_op = (BinOp *)node.node;    
+    NodeReturn left = bin_op->left;
+    
+    if (left.node_type == BINOP) {
+        vist_binop(left);
+    }
+    else if (left.node_type == NUMBER) {
+        vist_number(left);
+    }
+
+    String op = bin_op->op;
+    printf("%s", op.str);
+
+    NodeReturn right = bin_op->right;
+
+    if (right.node_type == BINOP) {
+        vist_binop(right);
+    }
+    else if (right.node_type == NUMBER) {
+        vist_number(right);
+    }
+    printf(")");
 }
 
 void generate_ast(String *tokens) {
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
-    BinOp *bin_op = node.node;
 
-    Number *left = (Number *)bin_op->left;
-    Number *right = (Number *)bin_op->right;
-
-    printf("%d\n", left->value);
-    printf("%d\n", right->value);   
+    if (node.node_type == BINOP) {
+        vist_binop(node);
+    }
+    else if (node.node_type == NUMBER) {
+        vist_number(node);
+    }
+    printf("\n");
 }
