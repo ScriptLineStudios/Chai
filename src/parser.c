@@ -100,45 +100,47 @@ NodeReturn expression(String *tokens) {
     }
     return left;
 }
+ 
+void vist_number(NodeReturn node) {
+    Number *number = (Number *)node.node;
+    printf("%d", number->value);
+}
+
+void vist_binop(NodeReturn node) {
+    printf("(");
+    BinOp *bin_op = (BinOp *)node.node;    
+    NodeReturn left = bin_op->left;
+    
+    if (left.node_type == BINOP) {
+        vist_binop(left);
+    }
+    else if (left.node_type == NUMBER) {
+        vist_number(left);
+    }
+
+    String op = bin_op->op;
+    printf("%s", op.str);
+
+    NodeReturn right = bin_op->right;
+
+    if (right.node_type == BINOP) {
+        vist_binop(right);
+    }
+    else if (right.node_type == NUMBER) {
+        vist_number(right);
+    }
+    printf(")");
+}
 
 void generate_ast(String *tokens) {
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
-    printf("%d\n", node.node_type); //We now know this is a bin op
-    BinOp *bin_op = (BinOp *)node.node;    
 
-    NodeReturn left = bin_op->left;
-    printf("%d\n", left.node_type); //We now know this is a number node
-    Number *left_number = (Number *)left.node;
-
-    NodeReturn right = bin_op->right;
-    printf("%d\n", right.node_type); //We now know this is bin op
-    BinOp *right_binop = (BinOp *)right.node;
-
-    NodeReturn right_left = right_binop->left;
-    printf("%d\n", right_left.node_type); //We now know this is a number node
-    Number *right_left_number = (Number *)right_left.node;
-
-    NodeReturn right_right = right_binop->right;
-    printf("%d\n", right_right.node_type); //We now know this is a number node
-    Number *right_right_number = (Number *)right_right.node;
-
-    printf("%d %d %d \n", left_number->value, right_left_number->value, right_right_number->value);
-
-
-    // NodeReturn node = expression(tokens);
-    // printf("%d\n", node.node_type); //We now know this is a bin op
-    // BinOp *bin_op = (BinOp *)node.node;
-    
-    // NodeReturn left = bin_op->left;
-    // printf("%d\n", left.node_type); //We now know this is a number node
-    // Number *left_number = (Number *)left.node;
-
-    // NodeReturn right = bin_op->right;
-    // printf("%d\n", right.node_type); //We now know this is also a number node
-    // Number *right_number = (Number *)right.node;
-    
-
-    // printf("LEFT = %d\n", left_number->value);
-    // printf("RIGHT = %d\n", right_number->value);
+    if (node.node_type == BINOP) {
+        vist_binop(node);
+    }
+    else if (node.node_type == NUMBER) {
+        vist_number(node);
+    }
+    printf("\n");
 }
