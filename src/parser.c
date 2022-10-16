@@ -74,9 +74,10 @@ NodeReturn create_bin_op_node(NodeReturn left, String op, NodeReturn right) {
 
 int isnumber(char *input) {
     int length = strlen(input);
-    for (int i=0;i<length; i++)
-    if (!isdigit(input[i])) {
-        return 0;
+    for (int i = 0; i < length; i++) {
+        if (!isdigit(input[i])) {
+            return 0;
+        }    
     }
     return 1;
 }
@@ -102,6 +103,7 @@ NodeReturn factor(String *tokens) {
 
         return return_node(number, NUMBER);
     }
+
     else if (isvariable(current_token.str) == 1) {
         UseVar *use_var = (UseVar*)malloc(sizeof(UseVar));
         use_var->name = current_token.str;
@@ -163,6 +165,8 @@ NodeReturn expression(String *tokens) {
     }
     return left;
 }
+
+void visit_node(NodeReturn node);
  
 void visit_number(NodeReturn node) {
     Number *number = (Number *)node.node;
@@ -179,55 +183,28 @@ void visit_binop(NodeReturn node) {
     BinOp *bin_op = (BinOp *)node.node;    
     NodeReturn left = bin_op->left;
     
-    if (left.node_type == BINOP) {
-        visit_binop(left);
-    }
-    else if (left.node_type == NUMBER) {
-        visit_number(left);
-    }
-    else if (left.node_type == USEVAR) {
-        visit_use_var(left);
-    }
+    visit_node(left);
 
     String op = bin_op->op;
     printf(" %s ", op.str);
 
     NodeReturn right = bin_op->right;
 
-    if (right.node_type == BINOP) {
-        visit_binop(right);
-    }
-    else if (right.node_type == NUMBER) {
-        visit_number(right);
-    }
-    else if (right.node_type == USEVAR) {
-        visit_use_var(right);
-    }
+    visit_node(right);
+
     printf(")");
 }
+
 
 void visit_var_assign_node(NodeReturn node) {
     VarAssign *var = (VarAssign *)node.node;
     NodeReturn expr = var->expression;
     printf("VAR ASSIGN (%s): ", var->var_name);
 
-    if (expr.node_type == BINOP) {
-        visit_binop(expr);
-    }
-    else if (expr.node_type == NUMBER) {
-        visit_number(expr);
-    }
-    else if (expr.node_type == USEVAR) {
-        visit_use_var(expr);
-    }
-    else {
-        printf("Unknown type: %d\n", expr.node_type);
-    } 
+    visit_node(expr);
 }
 
-void generate_and_visit_node(String *tokens) {
-    advance_symbol(tokens);
-    NodeReturn node = expression(tokens);
+void visit_node(NodeReturn node) {
     if (node.node_type == BINOP) {
         visit_binop(node);
     }
@@ -237,9 +214,18 @@ void generate_and_visit_node(String *tokens) {
     else if (node.node_type == VARASSIGN) {
         visit_var_assign_node(node);
     }
+    else if (node.node_type == USEVAR) {
+        visit_use_var(node);
+    }
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
+}
+
+void generate_and_visit_node(String *tokens) {
+    advance_symbol(tokens);
+    NodeReturn node = expression(tokens);
+    visit_node(node);
     printf("\n");
 }
 
