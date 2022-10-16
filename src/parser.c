@@ -67,8 +67,6 @@ void *factor(String *tokens) {
 
 void *term(String *tokens) {
     void *left = factor(tokens);
-    printf("LEFT NUMBER (TEREM) = %p\n", left);
-    printf("CURRENT TOKEN = %s\n", current_token.str);
 
     if (current_token.str != NULL) {
         while (strcmp(current_token.str, "*") == 0 || strcmp(current_token.str, "/") == 0) {
@@ -76,37 +74,27 @@ void *term(String *tokens) {
             advance_symbol(tokens);
 
             void *right = factor(tokens);
-            printf("RIGHT NUMBER = %p\n", left);
-
             left = create_bin_op_node(left, op, right);
         }
     }
-    printf("Returning left...\n");
     return left;
 }
 
 void *expression(String *tokens) {
     void *left = term(tokens);
-    printf("LEFT = %p\n", left);
 
     while (current_token.str != NULL && (strcmp(current_token.str, "+") == 0 || strcmp(current_token.str, "-") == 0)) {
         String op = current_token;
         advance_symbol(tokens);
-        printf("so far so good\n");
         void *right = term(tokens); 
-        printf("RIGHT = %p\n", right);
         left = create_bin_op_node(left, op, right);
-        printf("BIN OP NODE CREATED SUCESSFULLY\n");
-        printf("CURRENT TOKEN = %s\n", current_token);
     }
-    printf("RETURNING!\n");
     return left;
 }
 
 void generate_ast(String *tokens) {
     advance_symbol(tokens);
     void *left = expression(tokens);
-    printf("SUCCESSFULLY AQUIRED NODE: %p\n", left);
     BinOp *bin_op = (BinOp *)left; 
     Number *bin_op_left = (Number *)bin_op->left;
     Number *bin_op_right = (Number *)bin_op->right;
