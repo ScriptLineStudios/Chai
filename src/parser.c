@@ -10,7 +10,8 @@ int token_index = -1;
 typedef enum {
     NULL_TYPE = 0,
     NUMBER = 1,
-    BINOP = 2
+    BINOP = 2,
+    VARASSIGN = 3
 } NodeType;
 
 String current_token;
@@ -27,6 +28,11 @@ typedef struct {
 } BinOp;
 
 typedef struct {
+    char *var_name;
+    NodeReturn expression;
+} VarAssign;
+
+typedef struct {
     int value;
 } Number;
 
@@ -41,6 +47,15 @@ NodeReturn return_node(void *node, NodeType node_type) {
     ret.node_type = node_type;
 
     return ret;
+}
+
+NodeReturn create_var_assign_node(char *var_name, NodeReturn expression) {
+    VarAssign *result = (VarAssign*)malloc(sizeof(VarAssign));
+
+    result->var_name = var_name;
+    result->expression = expression;
+
+    return return_node((void *)result, VARASSIGN);
 }
 
 NodeReturn create_bin_op_node(NodeReturn left, String op, NodeReturn right) {
@@ -88,6 +103,28 @@ NodeReturn term(String *tokens) {
 }
 
 NodeReturn expression(String *tokens) {
+    if (strcmp(current_token.str, "let") == 0) {
+        advance_symbol(tokens);
+        if (strcmp(current_token.str, "identifier") != 0) {
+            printf("Expected identifier\n");
+            exit(1);
+        }
+
+        char *var_name = current_token.str;
+        advance_symbol(tokens);
+
+        if (strcmp(current_token.str, "=") != 0) {
+            printf("Expected =\n");
+            exit(1);
+        }
+        advance_symbol(tokens);
+        NodeReturn var_expression = expression(tokens);
+
+        NodeReturn variable = create_var_assign_node(var_name, var_expression);
+
+        return variable;
+    }
+
     NodeReturn left = term(tokens);
 
     while (current_token.str != NULL && (strcmp(current_token.str, "+") == 0 || strcmp(current_token.str, "-") == 0)) {
@@ -101,46 +138,67 @@ NodeReturn expression(String *tokens) {
     return left;
 }
  
-void vist_number(NodeReturn node) {
+void visit_number(NodeReturn node) {
     Number *number = (Number *)node.node;
     printf("%d", number->value);
 }
 
-void vist_binop(NodeReturn node) {
+void visit_binop(NodeReturn node) {
     printf("(");
     BinOp *bin_op = (BinOp *)node.node;    
     NodeReturn left = bin_op->left;
     
     if (left.node_type == BINOP) {
-        vist_binop(left);
+        visit_binop(left);
     }
     else if (left.node_type == NUMBER) {
-        vist_number(left);
+        visit_number(left);
     }
 
     String op = bin_op->op;
-    printf("%s", op.str);
+    printf(" %s ", op.str);
 
     NodeReturn right = bin_op->right;
 
     if (right.node_type == BINOP) {
-        vist_binop(right);
+        visit_binop(right);
     }
     else if (right.node_type == NUMBER) {
-        vist_number(right);
+        visit_number(right);
     }
     printf(")");
 }
+
+
+void visit_var_assign_node(NodeReturn node) {
+    printf("VAR ASSIGN: ");
+    VarAssign *var = (VarAssign *)node.node;
+    NodeReturn expr = var->expression;
+
+    if (expr.node_type == BINOP) {
+        visit_binop(expr);
+    }
+    else if (expr.node_type == NUMBER) {
+        visit_number(expr);
+    }
+}
+
 
 void generate_ast(String *tokens) {
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
 
     if (node.node_type == BINOP) {
-        vist_binop(node);
+        visit_binop(node);
     }
     else if (node.node_type == NUMBER) {
-        vist_number(node);
+        visit_number(node);
+    }
+    else if (node.node_type == VARASSIGN) {
+        visit_var_assign_node(node);
+    }
+    else {
+        printf("Unknown type: %d\n", node.node_type);
     }
     printf("\n");
 }

@@ -20,7 +20,13 @@ static char *parse_identifier(char *line, int start, int *end, char *res) {
 	}
 
 	*end = i;
-	return (char *)&res[0];
+	
+	if (strcmp(res, "let") == 0) {
+		return (char *)&res[0];
+	}
+	else {
+		return "identifier";
+	}
 }
 
 static char *parse_integer(char *line, int start, int *end, char *res) {
