@@ -4,42 +4,11 @@
 #include <ctype.h>
 
 #include "lexer.h"
+#include "codegen.h"
 
 int token_index = 0;
 
-typedef enum {
-    NULL_TYPE = 0,
-    NUMBER = 1,
-    BINOP = 2,
-    VARASSIGN = 3,
-    USEVAR = 4
-} NodeType;
-
 Token *current_token;
-
-typedef struct {
-    void *node;
-    NodeType node_type;
-} NodeReturn;
-
-typedef struct {
-    NodeReturn left;
-    Token op;
-    NodeReturn right;
-} BinOp;
-
-typedef struct {
-    char *var_name;
-    NodeReturn expression;
-} VarAssign;
-
-typedef struct {
-    char *name;
-} UseVar;
-
-typedef struct {
-    int value;
-} Number;
 
 void advance_symbol(Token *tokens) {
     current_token = tokens+token_index;
@@ -169,6 +138,7 @@ void visit_node(NodeReturn node);
  
 void visit_number(NodeReturn node) {
     Number *number = (Number *)node.node;
+    codegen_number(node);
     printf("%d", number->value);
 }
 
@@ -190,6 +160,12 @@ void visit_binop(NodeReturn node) {
     NodeReturn right = bin_op->right;
 
     visit_node(right);
+    if (op.type == TOK_PLUS) {
+        codegen_add(node);
+    }
+    else if (op.type == TOK_MULT) {
+        codegen_mult(node);
+    }
 
     printf(")");
 }
@@ -201,6 +177,7 @@ void visit_var_assign_node(NodeReturn node) {
     printf("VAR ASSIGN (%s): ", var->var_name);
 
     visit_node(expr);
+    codegen_var(expr);
 }
 
 void visit_node(NodeReturn node) {
@@ -230,6 +207,7 @@ void generate_and_visit_node(Token *tokens) {
 }
 
 void generate_ast(Token *tokens, int ntokens) {
-	for(int i = 0; i < ntokens; i++)
-    	generate_and_visit_node(tokens);
+    codegen_setup();
+    generate_and_visit_node(tokens);
+    codegen_end();
 }

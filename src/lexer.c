@@ -75,7 +75,7 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				x++;
 				break;
             case '*':
-            	tokens[x].type = TOK_MINUS;
+            	tokens[x].type = TOK_MULT;
 				tokens[x].value = "*";
 				x++;
 				break;
