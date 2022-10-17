@@ -6,13 +6,15 @@ CC := gcc
 
 CONFIG ?= Release
 
+CFLAGS ?= -Iinclude
+
 # Release config
 ifeq ($(CONFIG),Release)
-CFLAGS ?= -m64 -std=c17 -flto -Ofast -ffunction-sections -fdata-sections
-LDFLAGS ?= -m64 -flto -Ofast -s -Wl,--gc-sections,--as-needed
+CFLAGS += -m64 -std=c17 -flto -Ofast -ffunction-sections -fdata-sections
+LDFLAGS += -m64 -flto -Ofast -s -Wl,--gc-sections,--as-needed
 else ifeq ($(CONFIG),Debug) # Debug
-CFLAGS ?= -m64 -std=c17 -Og -ggdb
-LDFLAGS ?= -m64 -Og -ggdb
+CFLAGS += -m64 -std=c17 -Og -ggdb
+LDFLAGS += -m64 -Og -ggdb
 endif
 
 BUILD_DIRS ?= $(sort $(dir $(OBJ)))

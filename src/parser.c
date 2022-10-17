@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "../include/lexer.h"
+#include "lexer.h"
 
-int token_index = -1;
+int token_index = 0;
 
 typedef enum {
     NULL_TYPE = 0,
@@ -15,7 +15,7 @@ typedef enum {
     USEVAR = 4
 } NodeType;
 
-String current_token;
+Token *current_token;
 
 typedef struct {
     void *node;
@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
     NodeReturn left;
-    String op;
+    Token op;
     NodeReturn right;
 } BinOp;
 
@@ -41,9 +41,9 @@ typedef struct {
     int value;
 } Number;
 
-void advance_symbol(String *tokens) {
-    token_index += 1;
-    current_token = tokens[token_index];
+void advance_symbol(Token *tokens) {
+    current_token = &tokens[token_index];
+    token_index++;
 }
 
 NodeReturn return_node(void *node, NodeType node_type) {
@@ -63,7 +63,7 @@ NodeReturn create_var_assign_node(char *var_name, NodeReturn expression) {
     return return_node((void *)result, VARASSIGN);
 }
 
-NodeReturn create_bin_op_node(NodeReturn left, String op, NodeReturn right) {
+NodeReturn create_bin_op_node(NodeReturn left, Token op, NodeReturn right) {
     BinOp *result = (BinOp*)malloc(sizeof(BinOp));
 
     result->left = left;
@@ -94,19 +94,19 @@ int isvariable(char *input) {
     return 0;
 }
 
-NodeReturn factor(String *tokens) {
+NodeReturn factor(Token *tokens) {
     Number *number = (Number*)malloc(sizeof(Number));
 
-    if (isnumber(current_token.str) == 1) {
-        number->value = atoi(current_token.str);
+    if (current_token->type == TOK_NUMBER) {
+        number->value = atoi(current_token->value);
         advance_symbol(tokens);
 
         return return_node(number, NUMBER);
     }
 
-    else if (isvariable(current_token.str) == 1) {
+    else if (isvariable(current_token->value) == 1) {
         UseVar *use_var = (UseVar*)malloc(sizeof(UseVar));
-        use_var->name = current_token.str;
+        use_var->name = current_token->value;
         advance_symbol(tokens);
 
         return return_node(use_var, USEVAR);
@@ -114,11 +114,11 @@ NodeReturn factor(String *tokens) {
     return return_node(NULL, NULL_TYPE);
 }
 
-NodeReturn term(String *tokens) {
+NodeReturn term(Token *tokens) {
     NodeReturn left = factor(tokens);
 
-    while (current_token.str != NULL && (strcmp(current_token.str, "*") == 0 || strcmp(current_token.str, "/") == 0)) {
-        String op = current_token;
+    while (current_token->type == TOK_MULT || current_token->type == TOK_DIV) {
+        Token op = *current_token;
         advance_symbol(tokens);
 
         NodeReturn right = factor(tokens);
@@ -128,20 +128,19 @@ NodeReturn term(String *tokens) {
     return left;
 }
 
-NodeReturn expression(String *tokens) {
-    if (strcmp(current_token.str, "let") == 0) {
+NodeReturn expression(Token *tokens) {
+    if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
-        if (strcmp(current_token.str, "=") == 0) {
+        if (current_token->type != TOK_IDENT) {
             printf("Expected identifier\n");
             exit(1);
         }
 
-        char *var_name = current_token.str;
-        var_names[variables] = var_name;
-        variables++;
+        char *var_name = current_token->value;
+        var_names[variables++] = var_name;
         advance_symbol(tokens);
 
-        if (strcmp(current_token.str, "=") != 0) {
+        if (current_token->type != TOK_EQUALS) {
             printf("Expected =\n");
             exit(1);
         }
@@ -155,8 +154,8 @@ NodeReturn expression(String *tokens) {
 
     NodeReturn left = term(tokens);
 
-    while (current_token.str != NULL && (strcmp(current_token.str, "+") == 0 || strcmp(current_token.str, "-") == 0)) {
-        String op = current_token;
+    while (current_token->type == TOK_PLUS || current_token->type == TOK_MINUS) {
+        Token op = *current_token;
         advance_symbol(tokens);
 
         NodeReturn right = term(tokens);
@@ -185,8 +184,8 @@ void visit_binop(NodeReturn node) {
     
     visit_node(left);
 
-    String op = bin_op->op;
-    printf(" %s ", op.str);
+    Token op = bin_op->op;
+    printf(" %s ", op.value);
 
     NodeReturn right = bin_op->right;
 
@@ -222,14 +221,17 @@ void visit_node(NodeReturn node) {
     }
 }
 
-void generate_and_visit_node(String *tokens) {
+void generate_and_visit_node(Token *tokens) {
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
+
     visit_node(node);
     printf("\n");
 }
 
-void generate_ast(String *tokens) {
+void generate_ast(Token *tokens) {
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
+
+    //generate_and_visit_node(tokens);
 }
