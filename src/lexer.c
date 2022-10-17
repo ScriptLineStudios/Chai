@@ -1,17 +1,15 @@
+#include "lexer.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
-typedef struct {
-	char *str;
-} String;
+#define MAX_LINE_LEN 100
 
+char *parse_identifier(char *line, int start, int *end, char *res) {
+	int i = start;
 
-static char *parse_identifier(char *line, int start, int *end, char *res) {
-	int i = 0;
-
-	for (i = start; i < strlen(line); i++) {
+	for (; i < strlen(line); i++) {
         if (isalnum(line[i])) {
 			strncat(res, &line[i], 1);
         } else {
@@ -20,20 +18,13 @@ static char *parse_identifier(char *line, int start, int *end, char *res) {
 	}
 
 	*end = i;
-	return (char *)&res[0];
-
-	if (strcmp(res, "let") == 0) {
-		return (char *)&res[0];
-	}
-	else {
-		return "identifier";
-	}
+	return res;
 }
 
-static char *parse_integer(char *line, int start, int *end, char *res) {
-	int i = 0;
+char *parse_integer(char *line, int start, int *end, char *res) {
+	int i = start;
 
-	for (i = start; i < strlen(line); i++) {
+	for (; i < strlen(line); i++) {
         if (isdigit(line[i])) {
 			strncat(res, &line[i], 1);
         } else {
@@ -42,61 +33,44 @@ static char *parse_integer(char *line, int start, int *end, char *res) {
 	}
 
 	*end = i;
-	return (char *)&res[0];
+	return res;
 }
 
-String *lex_file(FILE *file_ptr) {
-	char ch;
-	char *str = malloc(sizeof(char) * 0);
-
-	char *array = malloc(sizeof(char) * 0);
-    char line[100];
-	String *tokens = malloc(sizeof(String) * 100);
+Token *lex_file(FILE *file_ptr) {
+    char line[MAX_LINE_LEN] = {0};
+	Token *tokens = malloc(sizeof(Token) * 100);
+	memset(tokens, 0, sizeof(Token) * 100);
 	int x = 0;
 
-    while (fgets(line, 100, file_ptr)) {
+    while (fgets(line, MAX_LINE_LEN, file_ptr)) {
+    	printf("%i\n", tokens[0].type);
 		int skip = 1;
 		line[strcspn(line, "\n")] = 0;
-		for (int col = 0; col < strlen(line); col+=skip, skip=1) {
-			String token;
+		for (int col = 0; col < MAX_LINE_LEN; col+=skip, skip=1) {
 			switch (line[col]) {
 			case ' ':
 			case '\t':
 				break;
-			case ';': 
-				token.str = ";";
-				tokens[x] = token;
-				x++;
+			case ';':
+				tokens[x++].type = TOK_SEMI;
 				break;
 			case '=': 
-				token.str = "=";
-				tokens[x] = token;
-				x++;
+				tokens[x++].type = TOK_EQUALS;
 				break;
-			case '(': 
-				token.str = "(";
-				tokens[x] = token;
-				x++;
+			case '(':
+				tokens[x++].type = TOK_OPEN_PARENTHESES;
 				break;
 			case ')': 
-				token.str = ")";
-				tokens[x] = token;
-				x++;
+				tokens[x++].type = TOK_CLOSE_PARENTHESES;
 				break;
-			case '+': 
-				token.str = "+";
-				tokens[x] = token;
-				x++;
+			case '+':
+				tokens[x++].type = TOK_PLUS;
 				break;
-            case '*': 
-				token.str = "*";
-				tokens[x] = token;
-				x++;
+            case '*':
+            	tokens[x++].type = TOK_MINUS;
 				break;
             case '/': 
-				token.str = "/";
-				tokens[x] = token;
-				x++;
+            	tokens[x++].type = TOK_DIV;
 				break;
 			case '0':        
 			case '1':
@@ -107,20 +81,22 @@ String *lex_file(FILE *file_ptr) {
 			case '6':
 			case '7':
 			case '8':
-			case '9': 
+			case '9': {
 				char *_res = malloc(sizeof(char) * 100);
-				token.str = parse_integer(line, col, &skip, _res);
-				tokens[x] = token;
-				x++;
+				memset(_res, 0, 100);
+				tokens[x++].type = TOK_NUMBER;
+				tokens[x].value = strdup(parse_integer(line, col, &skip, _res));
 				skip -= col;
-				break;
-			default: 
+			}
+			break;
+			default: {
 				char *res = malloc(sizeof(char) * 100);
-				token.str = parse_identifier(line, col, &skip, res);
-				tokens[x] = token;
-				x++;
+				memset(res, 0, 100);
+				tokens[x++].type = TOK_IDENT;
+				tokens[x].value = strdup(parse_identifier(line, col, &skip, res));
 				skip -= col;
-				break;
+			}
+			break;
 			}
 		}
 
