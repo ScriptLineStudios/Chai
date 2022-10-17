@@ -8,8 +8,9 @@
 
 int main(int argc, char *argv[]) {
 	printf("STARTING FILE LEXING...\n");
-	Token *tokens = lex_file(fopen(argv[1], "r"));
+	Token *tokens = malloc(sizeof(Token) * 100);
+	int ntok = lex_file(tokens, fopen(argv[1], "r"));
 	printf("ENDING FILE LEXING...\n");
 
-	generate_ast(tokens);
+	generate_ast(tokens, ntok);
 }

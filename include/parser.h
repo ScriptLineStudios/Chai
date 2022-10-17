@@ -1,8 +1,4 @@
-#ifndef PARSER_H
-#define PARSER_H
-
+#pragma once
 #include "lexer.h"
 
-void generate_ast(Token *tokens);
-
-#endif
+void generate_ast(Token *tokens, int ntokens);
