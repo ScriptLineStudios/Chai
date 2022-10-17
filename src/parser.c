@@ -42,7 +42,7 @@ typedef struct {
 } Number;
 
 void advance_symbol(Token *tokens) {
-    current_token = &tokens[token_index];
+    current_token = tokens+token_index;
     token_index++;
 }
 
@@ -229,9 +229,7 @@ void generate_and_visit_node(Token *tokens) {
     printf("\n");
 }
 
-void generate_ast(Token *tokens) {
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-
-    //generate_and_visit_node(tokens);
+void generate_ast(Token *tokens, int ntokens) {
+	for(int i = 0; i < ntokens; i++)
+    	generate_and_visit_node(tokens);
 }

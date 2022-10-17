@@ -22,4 +22,4 @@ typedef struct {
 	int test;
 } Token;
 
-Token *lex_file(FILE *file_ptr);
+int lex_file(Token *tokens, FILE *file_ptr);

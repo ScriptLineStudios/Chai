@@ -36,9 +36,8 @@ char *parse_integer(char *line, int start, int *end, char *res) {
 	return res;
 }
 
-Token *lex_file(FILE *file_ptr) {
+int lex_file(Token *tokens, FILE *file_ptr) {
     char line[MAX_LINE_LEN] = {0};
-	Token *tokens = malloc(sizeof(Token) * 100);
 	memset(tokens, 0, sizeof(Token) * 100);
 	int x = 0;
 
@@ -118,5 +117,5 @@ Token *lex_file(FILE *file_ptr) {
     }
 
     fclose(file_ptr);
-	return tokens;
+	return x;
 }
