@@ -42,7 +42,8 @@ typedef struct {
 } Number;
 
 void advance_symbol(Token *tokens) {
-    current_token = &tokens[token_index++];
+    current_token = &tokens[token_index];
+    token_index++;
 }
 
 NodeReturn return_node(void *node, NodeType node_type) {
@@ -221,13 +222,16 @@ void visit_node(NodeReturn node) {
 }
 
 void generate_and_visit_node(Token *tokens) {
-	printf("Here\n");
+    advance_symbol(tokens);
     NodeReturn node = expression(tokens);
+
     visit_node(node);
     printf("\n");
 }
 
 void generate_ast(Token *tokens) {
     generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
+
     //generate_and_visit_node(tokens);
 }
