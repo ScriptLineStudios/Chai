@@ -6,7 +6,8 @@ typedef enum {
     NUMBER = 1,
     BINOP = 2,
     VARASSIGN = 3,
-    USEVAR = 4
+    USEVAR = 4,
+    STDOUT = 5
 } NodeType;
 
 typedef struct {
@@ -28,6 +29,10 @@ typedef struct {
 typedef struct {
     char *name;
 } UseVar;
+
+typedef struct {
+    NodeReturn expression;
+} StdOut;
 
 typedef struct {
     int value;

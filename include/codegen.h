@@ -12,4 +12,7 @@ void codegen_mult(NodeReturn node);
 
 void codegen_var(NodeReturn node);
 
+//Standard Library
+void codegen_stdout(NodeReturn node);
+
 #endif

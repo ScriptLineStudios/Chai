@@ -6,10 +6,12 @@
 FILE *file_ptr;
 void codegen_setup(NodeReturn node) {
     file_ptr = fopen("code.asm", "w");
+
+    fprintf(file_ptr, "global main\n");
+    fprintf(file_ptr, "extern printf\n");
     fprintf(file_ptr, "section .text\n");
-    fprintf(file_ptr, "    global _start\n");
-    fprintf(file_ptr, "_start:\n");
-    fprintf(file_ptr, "    mov rax, 0\n");
+    fprintf(file_ptr, "main:\n");
+
 }
 
 void codegen_number(NodeReturn node) {
@@ -37,8 +39,17 @@ void codegen_var(NodeReturn node) {
     fprintf(file_ptr, "    mov [rsp], rax\n");
 }
 
+void codegen_stdout(NodeReturn node) {
+    fprintf(file_ptr, "    pop rax\n");
+    fprintf(file_ptr, "    mov rdi, format\n");
+    fprintf(file_ptr, "    mov rsi, rax\n");
+    fprintf(file_ptr, "    xor rax, rax\n");
+    fprintf(file_ptr, "    call printf\n");
+}
+
 void codegen_end() {
-    fprintf(file_ptr, "    mov rax, 60\n");
-    fprintf(file_ptr, "    mov rdi, 0\n");
-    fprintf(file_ptr, "    syscall\n");
+    fprintf(file_ptr, "    ret\n");
+    fprintf(file_ptr, "format:\n");
+    fprintf(file_ptr, "    db %s", "\"%d\"");
+    
 }
