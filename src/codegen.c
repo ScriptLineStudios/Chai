@@ -19,11 +19,6 @@ void codegen_number(NodeReturn node) {
     fprintf(file_ptr, "    push %d\n", number->value);
 }
 
-void codegen_var_use(NodeReturn node) {
-    fprintf(file_ptr, "    mov rax, [rsp]\n");
-    fprintf(file_ptr, "    push rax\n");
-}
-
 void codegen_add(NodeReturn node) {
     Number *number = (Number *)node.node;
     fprintf(file_ptr, "    pop rax\n");
@@ -39,9 +34,16 @@ void codegen_mult(NodeReturn node) {
     fprintf(file_ptr, "    push rax\n");
 }
 
+void codegen_var_use(NodeReturn node) {
+    UseVar *use_var = (UseVar *)node.node;
+    fprintf(file_ptr, "    mov rax, [rsp-%d]\n", use_var->index * 8);
+    fprintf(file_ptr, "    push rax\n");
+}
+
 void codegen_var(NodeReturn node) {
+    VarAssign *var = (VarAssign *)node.node;
     fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    mov [rsp], rax\n");
+    fprintf(file_ptr, "    mov [rsp-%d], rax\n", var->index * 8);
 }
 
 void codegen_stdout(NodeReturn node) {

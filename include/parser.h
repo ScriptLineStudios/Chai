@@ -23,11 +23,13 @@ typedef struct {
 
 typedef struct {
     char *var_name;
+    int index;
     NodeReturn expression;
 } VarAssign;
 
 typedef struct {
     char *name;
+    int index;
 } UseVar;
 
 typedef struct {

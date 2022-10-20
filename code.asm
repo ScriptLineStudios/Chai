@@ -5,17 +5,11 @@ main:
     sub rsp, 32
     push 10
     pop rax
-    mov [rsp], rax
-    mov rax, [rsp]
-    push rax
-    push 1
+    mov [rsp-0], rax
+    push 20
     pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-    pop rax
-    mov [rsp], rax
-    mov rax, [rsp]
+    mov [rsp-8], rax
+    mov rax, [rsp-0]
     push rax
     pop rax
     mov rdi, format

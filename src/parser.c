@@ -23,11 +23,16 @@ NodeReturn return_node(void *node, NodeType node_type) {
     return ret;
 }
 
+int var_index = 0;
+
 NodeReturn create_var_assign_node(char *var_name, NodeReturn expression) {
     VarAssign *result = (VarAssign*)malloc(sizeof(VarAssign));
 
     result->var_name = var_name;
     result->expression = expression;
+    result->index = var_index;
+
+    var_index++; 
 
     return return_node((void *)result, VARASSIGN);
 }
@@ -70,6 +75,14 @@ int isvariable(char *input) {
     return 0;
 }
 
+int getvariableindex(char *input) {
+    for (int i = 0; i < 100; i++) {
+        if (strcmp(input, var_names[i]) == 0) {
+            return i;
+        }
+    }
+}
+
 NodeReturn factor(Token *tokens) {
     Number *number = (Number*)malloc(sizeof(Number));
 
@@ -83,6 +96,8 @@ NodeReturn factor(Token *tokens) {
     else if (isvariable(current_token->value) == 1) {
         UseVar *use_var = (UseVar*)malloc(sizeof(UseVar));
         use_var->name = current_token->value;
+        use_var->index = getvariableindex(current_token->value);
+
         advance_symbol(tokens);
 
         return return_node(use_var, USEVAR);
@@ -199,7 +214,7 @@ void visit_var_assign_node(NodeReturn node) {
     printf("VAR ASSIGN (%s): ", var->var_name);
 
     visit_node(expr);
-    codegen_var(expr);
+    codegen_var(node);
 }
 
 void visit_stdout_node(NodeReturn node) {
@@ -241,6 +256,7 @@ void generate_and_visit_node(Token *tokens) {
 }
 
 void generate_ast(Token *tokens, int ntokens) {
+    printf("%d\n", ntokens);
     codegen_setup();
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
