@@ -1,4 +1,4 @@
-let x = 10;
-let y = 12;
-stdout(x);
-stdout(y);
+let x = 3;
+let y = 2;
+let z = x * y + 1;
+stdout(z);

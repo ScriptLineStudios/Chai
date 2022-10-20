@@ -242,14 +242,14 @@ void visit_node(NodeReturn node) {
     if (node.node_type == BINOP) {
         visit_binop(node);
     }
+    else if (node.node_type == USEVAR) {
+        visit_use_var(node);
+    }
     else if (node.node_type == NUMBER) {
         visit_number(node);
     }
     else if (node.node_type == VARASSIGN) {
         visit_var_assign_node(node);
-    }
-    else if (node.node_type == USEVAR) {
-        visit_use_var(node);
     }
     else if (node.node_type == STDOUT) {
         visit_stdout_node(node);

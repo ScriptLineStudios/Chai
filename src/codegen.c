@@ -3,12 +3,15 @@
 #include "parser.h"
 #include "lexer.h"
 
+int pushes;
 FILE *file_ptr;
 void codegen_setup(NodeReturn node) {
     file_ptr = fopen("code.asm", "w");
 
     fprintf(file_ptr, "global main\n");
     fprintf(file_ptr, "extern printf\n");
+    fprintf(file_ptr, "section .data\n");
+    fprintf(file_ptr, "    x db 0\n");
     fprintf(file_ptr, "section .text\n");
     fprintf(file_ptr, "main:\n");
     fprintf(file_ptr, "    sub rsp, 32\n");
@@ -36,14 +39,14 @@ void codegen_mult(NodeReturn node) {
 
 void codegen_var_use(NodeReturn node) {
     UseVar *use_var = (UseVar *)node.node;
-    fprintf(file_ptr, "    mov rax, [rsp+%d]\n", use_var->index * 8);
+    fprintf(file_ptr, "    mov rax, [x+%d]\n", (use_var->index) * 8);
     fprintf(file_ptr, "    push rax\n");
 }
 
 void codegen_var(NodeReturn node) {
     VarAssign *var = (VarAssign *)node.node;
     fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    mov [rsp+%d], rax\n", var->index * 8);
+    fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index) * 8); //push the value onto the stack
 }
 
 void codegen_stdout(NodeReturn node) {
