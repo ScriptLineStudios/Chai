@@ -11,12 +11,17 @@ void codegen_setup(NodeReturn node) {
     fprintf(file_ptr, "extern printf\n");
     fprintf(file_ptr, "section .text\n");
     fprintf(file_ptr, "main:\n");
-
+    fprintf(file_ptr, "    sub rsp, 32\n");
 }
 
 void codegen_number(NodeReturn node) {
     Number *number = (Number *)node.node;
     fprintf(file_ptr, "    push %d\n", number->value);
+}
+
+void codegen_var_use(NodeReturn node) {
+    fprintf(file_ptr, "    mov rax, [rsp]\n");
+    fprintf(file_ptr, "    push rax\n");
 }
 
 void codegen_add(NodeReturn node) {
@@ -48,8 +53,8 @@ void codegen_stdout(NodeReturn node) {
 }
 
 void codegen_end() {
+    fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
     fprintf(file_ptr, "format:\n");
-    fprintf(file_ptr, "    db %s", "\"%d\"");
-    
+    fprintf(file_ptr, "    db %s", "\"%d\"");   
 }

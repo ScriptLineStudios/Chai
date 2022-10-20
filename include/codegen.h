@@ -11,6 +11,7 @@ void codegen_add(NodeReturn node);
 void codegen_mult(NodeReturn node);
 
 void codegen_var(NodeReturn node);
+void codegen_var_use(NodeReturn node);
 
 //Standard Library
 void codegen_stdout(NodeReturn node);

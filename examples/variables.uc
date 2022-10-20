@@ -1,1 +1,3 @@
-stdout(6 + 10000 * 7);
+let x = 10;
+let y = x + 1;
+stdout(y);

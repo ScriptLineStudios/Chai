@@ -165,6 +165,7 @@ void visit_number(NodeReturn node) {
 
 void visit_use_var(NodeReturn node) {
     UseVar *use_var = (UseVar *)node.node;
+    codegen_var_use(node);
     printf("%s", use_var->name);
 }
 
@@ -241,6 +242,8 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     codegen_end();
 }
