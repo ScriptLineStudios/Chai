@@ -3,13 +3,21 @@ extern printf
 section .text
 main:
     sub rsp, 32
-    push 1
+    push 10
+    pop rax
+    mov [rsp+0], rax
+    push 12
+    pop rax
+    mov [rsp+8], rax
+    mov rax, [rsp+0]
+    push rax
     pop rax
     mov rdi, format
     mov rsi, rax
     xor rax, rax
     call printf
-    push 2
+    mov rax, [rsp+8]
+    push rax
     pop rax
     mov rdi, format
     mov rsi, rax
@@ -18,4 +26,4 @@ main:
     add rsp, 32
     ret
 format:
-    db "%d"
+    db "%d", 10, 0

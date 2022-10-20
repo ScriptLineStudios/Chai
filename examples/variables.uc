@@ -1,2 +1,4 @@
-stdout(1);
-stdout(2);
+let x = 10;
+let y = 12;
+stdout(x);
+stdout(y);
