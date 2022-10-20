@@ -1,3 +1,2 @@
-let x = 10;
-let y = 20;
-stdout(x);
+stdout(1);
+stdout(2);

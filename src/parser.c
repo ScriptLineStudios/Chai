@@ -154,6 +154,18 @@ NodeReturn expression(Token *tokens) {
         NodeReturn expr = expression(tokens);
         NodeReturn res = create_stdout_node(expr);
 
+        if (current_token->type != TOK_CLOSE_PARENTHESES) {
+            printf("Expected )\n");
+            exit(1);
+        }
+
+        advance_symbol(tokens);
+
+        if (current_token->type != TOK_SEMI) {
+            printf("Expected ;\n");
+            exit(1);
+        }
+
         return res;
     }
 
@@ -248,6 +260,7 @@ void visit_node(NodeReturn node) {
 }
 
 void generate_and_visit_node(Token *tokens) {
+
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
     visit_node(node);
@@ -256,9 +269,7 @@ void generate_and_visit_node(Token *tokens) {
 }
 
 void generate_ast(Token *tokens, int ntokens) {
-    printf("%d\n", ntokens);
     codegen_setup();
-    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     codegen_end();

@@ -3,14 +3,13 @@ extern printf
 section .text
 main:
     sub rsp, 32
-    push 10
+    push 1
     pop rax
-    mov [rsp-0], rax
-    push 20
-    pop rax
-    mov [rsp-8], rax
-    mov rax, [rsp-0]
-    push rax
+    mov rdi, format
+    mov rsi, rax
+    xor rax, rax
+    call printf
+    push 2
     pop rax
     mov rdi, format
     mov rsi, rax
