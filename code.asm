@@ -5,15 +5,18 @@ section .data
 section .text
 main:
     sub rsp, 32
-    push 3
+    push 100
     pop rax
     mov [x+0], rax
-    push 8
+    mov rax, [x+0]
+    push rax
+    push 4
     pop rax
-    mov [x+8], rax
-    push 15
-    pop rax
-    mov [x+0], rax
+    pop rbx
+    cmp rax, rbx
+    jne if
+    je end_if
+if:
     mov rax, [x+0]
     push rax
     pop rax
@@ -21,8 +24,8 @@ main:
     mov rsi, rax
     xor rax, rax
     call printf
-    mov rax, [x+8]
-    push rax
+end_if:
+    push 7
     pop rax
     mov rdi, format
     mov rsi, rax

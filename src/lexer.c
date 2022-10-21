@@ -55,9 +55,12 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				x++;
 				break;
 			case '=': 
-				tokens[x].type = TOK_EQUALS;
-				tokens[x].value = "=";
-				x++;
+				if (line[col-1] != '!') {
+					tokens[x].type = TOK_EQUALS;
+					tokens[x].value = "=";
+					x++;
+					break;
+				}
 				break;
 			case '(':
 				tokens[x].type = TOK_OPEN_PARENTHESES;
@@ -83,6 +86,24 @@ int lex_file(Token *tokens, FILE *file_ptr) {
             	tokens[x].type = TOK_DIV;
 				tokens[x].value = "/";
 				x++;
+				break;
+			case '{': 
+            	tokens[x].type = TOK_OPEN_CURLY_BRACE;
+				tokens[x].value = "{";
+				x++;
+				break;
+			case '}': 
+            	tokens[x].type = TOK_CLOSE_CURLY_BRACE;
+				tokens[x].value = "}";
+				x++;
+				break;
+			case '!': 
+				if (line[col+1] == '=') {
+					tokens[x].type = TOK_NOT_EQUAL;
+					tokens[x].value = "!=";
+					x++;
+					break;
+				}
 				break;
 			case '0':        
 			case '1':

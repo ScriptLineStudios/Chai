@@ -49,6 +49,22 @@ void codegen_var(NodeReturn node) {
     fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index) * 8); //push the value onto the stack
 }
 
+void codegen_not_equal(NodeReturn node) {
+    fprintf(file_ptr, "    pop rax\n");
+    fprintf(file_ptr, "    pop rbx\n");
+    fprintf(file_ptr, "    cmp rax, rbx\n");
+    fprintf(file_ptr, "    jne if\n");
+    fprintf(file_ptr, "    je end_if\n");
+}
+
+void codegen_if(NodeReturn node) {
+    fprintf(file_ptr, "if:\n");
+}
+
+void codegen_end_node(NodeReturn node) {
+    fprintf(file_ptr, "end_if:\n");
+}
+
 void codegen_stdout(NodeReturn node) {
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    mov rdi, format\n");

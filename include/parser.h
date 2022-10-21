@@ -7,7 +7,9 @@ typedef enum {
     BINOP = 2,
     VARASSIGN = 3,
     USEVAR = 4,
-    STDOUT = 5
+    STDOUT = 5,
+    IF = 6,
+    END = 7,
 } NodeType;
 
 typedef struct {
@@ -35,6 +37,14 @@ typedef struct {
 typedef struct {
     NodeReturn expression;
 } StdOut;
+
+typedef struct {
+    NodeReturn expression;
+} IfNode;
+
+typedef struct {
+    int pos;
+} End;
 
 typedef struct {
     int value;
