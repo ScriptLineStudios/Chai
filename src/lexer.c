@@ -118,7 +118,6 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				memset(res, 0, 100);
 				tokens[x].type = TOK_IDENT;
 				tokens[x].value = parse_identifier(line, col, &skip, res);
-				printf("%s\n", tokens[x].value);
 				skip -= col;
 				x++;
 			}

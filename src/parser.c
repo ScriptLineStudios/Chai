@@ -64,6 +64,13 @@ NodeReturn create_bin_op_node(NodeReturn left, Token op, NodeReturn right) {
     return return_node((void *)result, BINOP);
 }
 
+NodeReturn create_if_node(NodeReturn expression) {
+    IfNode *result = (IfNode*)malloc(sizeof(IfNode));
+
+    result->expression = expression;
+    return return_node((void *)result, IF);
+}
+
 NodeReturn create_stdout_node(NodeReturn expr) {
     StdOut *result = (StdOut*)malloc(sizeof(StdOut));
 
@@ -181,7 +188,14 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
 
         NodeReturn if_expression = expression(tokens);
-        return if_expression;
+        NodeReturn if_statement = create_if_node(if_expression);
+
+        if (current_token->type != TOK_CLOSE_PARENTHESES) {
+            printf("Expected )\n");
+            exit(1);
+        }
+
+        return if_statement;
     }   
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
@@ -278,6 +292,13 @@ void visit_binop(NodeReturn node) {
     printf(")");
 }
 
+void visit_if_node(NodeReturn node) {
+    IfNode *var = (IfNode *)node.node;
+    NodeReturn expr = var->expression;
+    printf("IF: ");
+
+    visit_node(expr);
+}
 
 void visit_var_assign_node(NodeReturn node) {
     VarAssign *var = (VarAssign *)node.node;
@@ -313,6 +334,9 @@ void visit_node(NodeReturn node) {
     else if (node.node_type == STDOUT) {
         visit_stdout_node(node);
     }  
+    else if (node.node_type == IF) {
+        visit_if_node(node);
+    }  
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
@@ -328,6 +352,7 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     codegen_end();
 }

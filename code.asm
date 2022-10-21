@@ -6,6 +6,10 @@ section .text
 main:
     sub rsp, 32
     push 10
+    pop rax
+    mov [x+0], rax
+    mov rax, [x+0]
+    push rax
     push 4
     add rsp, 32
     ret
