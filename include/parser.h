@@ -21,6 +21,7 @@ typedef struct {
     NodeReturn left;
     Token op;
     NodeReturn right;
+    int stack_pos;
 } BinOp;
 
 typedef struct {
@@ -40,10 +41,11 @@ typedef struct {
 
 typedef struct {
     NodeReturn expression;
+    int stack_pos;
 } IfNode;
 
 typedef struct {
-    int pos;
+    int stack_pos;
 } End;
 
 typedef struct {

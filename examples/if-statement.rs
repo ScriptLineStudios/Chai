@@ -1,5 +1,7 @@
-let test = 100;
+let test = 5;
 if (test != 4) {
-    stdout(test);
+    if (test != 5) {
+        stdout(70);
+    }
 }
 stdout(7);

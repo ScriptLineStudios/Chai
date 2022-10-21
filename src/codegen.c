@@ -50,19 +50,22 @@ void codegen_var(NodeReturn node) {
 }
 
 void codegen_not_equal(NodeReturn node) {
+    BinOp *bin_op = (BinOp *)node.node;    
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    pop rbx\n");
     fprintf(file_ptr, "    cmp rax, rbx\n");
-    fprintf(file_ptr, "    jne if\n");
-    fprintf(file_ptr, "    je end_if\n");
+    fprintf(file_ptr, "    jne if_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    je end_if_%d\n", bin_op->stack_pos);
 }
 
 void codegen_if(NodeReturn node) {
-    fprintf(file_ptr, "if:\n");
+    IfNode *if_node = (IfNode *)node.node;
+    fprintf(file_ptr, "if_%d:\n", if_node->stack_pos);
 }
 
 void codegen_end_node(NodeReturn node) {
-    fprintf(file_ptr, "end_if:\n");
+    End *end_node = (End *)node.node;
+    fprintf(file_ptr, "end_if_%d:\n", end_node->stack_pos);
 }
 
 void codegen_stdout(NodeReturn node) {

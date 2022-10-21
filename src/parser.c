@@ -7,6 +7,7 @@
 #include "codegen.h"
 
 int token_index = 0;
+int if_statement_stack = -1;
 
 Token *current_token;
 
@@ -55,19 +56,22 @@ NodeReturn create_var_assign_node(char *var_name, NodeReturn expression) {
     return return_node((void *)result, VARASSIGN);
 }
 
-NodeReturn create_bin_op_node(NodeReturn left, Token op, NodeReturn right) {
+NodeReturn create_bin_op_node(NodeReturn left, Token op, NodeReturn right, int stack_pos) {
     BinOp *result = (BinOp*)malloc(sizeof(BinOp));
 
     result->left = left;
     result->op = op;
     result->right = right;
+    result->stack_pos = stack_pos;
+
     return return_node((void *)result, BINOP);
 }
 
-NodeReturn create_if_node(NodeReturn expression) {
+NodeReturn create_if_node(NodeReturn expression, int stack_pos) {
     IfNode *result = (IfNode*)malloc(sizeof(IfNode));
 
     result->expression = expression;
+    result->stack_pos = stack_pos;
     return return_node((void *)result, IF);
 }
 
@@ -78,9 +82,9 @@ NodeReturn create_stdout_node(NodeReturn expr) {
     return return_node((void *)result, STDOUT);
 }
 
-NodeReturn create_end_node() {
+NodeReturn create_end_node(int stack_pos) {
     End *result = (End*)malloc(sizeof(End));
-    //TODO: ADD indexing
+    result->stack_pos = stack_pos;
     return return_node((void *)result, END);
 }
 
@@ -154,10 +158,11 @@ NodeReturn term(Token *tokens) {
 
         NodeReturn right = factor(tokens);
 
-        left = create_bin_op_node(left, op, right);
+        left = create_bin_op_node(left, op, right, if_statement_stack);
     }
     return left;
 }
+
 
 NodeReturn expression(Token *tokens) {
     //printf("TOK: %s\n", current_token->value);
@@ -193,9 +198,9 @@ NodeReturn expression(Token *tokens) {
 
         advance_symbol(tokens);
 
+        if_statement_stack++;
         NodeReturn if_expression = expression(tokens);
-        NodeReturn if_statement = create_if_node(if_expression);
-
+        NodeReturn if_statement = create_if_node(if_expression, if_statement_stack); //if statement stack can be thought of as a pointer to the top of the stack
         if (current_token->type != TOK_CLOSE_PARENTHESES) {
             printf("Expected )\n");
             exit(1);
@@ -210,7 +215,9 @@ NodeReturn expression(Token *tokens) {
         return if_statement;
     }   
     else if (strcmp(current_token->value, "}") == 0) {
-        NodeReturn res = create_end_node();
+        int stack_pos = if_statement_stack;
+        if_statement_stack--;
+        NodeReturn res = create_end_node(stack_pos);
         return res;
     }
     else if (strcmp(current_token->value, "stdout") == 0) {
@@ -266,7 +273,7 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
         NodeReturn right = term(tokens);
 
-        left = create_bin_op_node(left, op, right);
+        left = create_bin_op_node(left, op, right, if_statement_stack);
     }
     return left;
 }
@@ -317,7 +324,7 @@ void visit_if_node(NodeReturn node) {
     printf("IF: ");
 
     visit_node(expr);
-    codegen_if(expr);
+    codegen_if(node);
 }
 
 void visit_var_assign_node(NodeReturn node) {
@@ -381,6 +388,8 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
