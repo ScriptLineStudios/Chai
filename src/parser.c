@@ -78,6 +78,12 @@ NodeReturn create_stdout_node(NodeReturn expr) {
     return return_node((void *)result, STDOUT);
 }
 
+NodeReturn create_end_node() {
+    End *result = (End*)malloc(sizeof(End));
+    //TODO: ADD indexing
+    return return_node((void *)result, END);
+}
+
 int isnumber(char *input) {
     int length = strlen(input);
     for (int i = 0; i < length; i++) {
@@ -195,8 +201,18 @@ NodeReturn expression(Token *tokens) {
             exit(1);
         }
 
+        advance_symbol(tokens);
+        if (current_token->type != TOK_OPEN_CURLY_BRACE) {
+            printf("Expected {\n");
+            exit(1);
+        }
+
         return if_statement;
     }   
+    else if (strcmp(current_token->value, "}") == 0) {
+        NodeReturn res = create_end_node();
+        return res;
+    }
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -287,6 +303,9 @@ void visit_binop(NodeReturn node) {
     }
     else if (op.type == TOK_MULT) {
         codegen_mult(node);
+    }    
+    else if (op.type == TOK_NOT_EQUAL) {
+        codegen_not_equal(node);
     }
 
     printf(")");
@@ -298,6 +317,7 @@ void visit_if_node(NodeReturn node) {
     printf("IF: ");
 
     visit_node(expr);
+    codegen_if(expr);
 }
 
 void visit_var_assign_node(NodeReturn node) {
@@ -307,6 +327,12 @@ void visit_var_assign_node(NodeReturn node) {
 
     visit_node(expr);
     codegen_var(node);
+}
+
+void visit_end_node(NodeReturn node) {
+    End *end = (End *)node.node;
+    codegen_end_node(node);
+    printf("END");
 }
 
 void visit_stdout_node(NodeReturn node) {
@@ -337,6 +363,9 @@ void visit_node(NodeReturn node) {
     else if (node.node_type == IF) {
         visit_if_node(node);
     }  
+    else if (node.node_type == END) {
+        visit_end_node(node);
+    }  
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
@@ -352,6 +381,9 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     codegen_end();

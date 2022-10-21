@@ -9,6 +9,7 @@ typedef enum {
     USEVAR = 4,
     STDOUT = 5,
     IF = 6,
+    END = 7,
 } NodeType;
 
 typedef struct {
@@ -40,6 +41,10 @@ typedef struct {
 typedef struct {
     NodeReturn expression;
 } IfNode;
+
+typedef struct {
+    int pos;
+} End;
 
 typedef struct {
     int value;
