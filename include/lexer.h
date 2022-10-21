@@ -14,6 +14,7 @@ typedef enum {
 	TOK_EQUALS,
 	TOK_OPEN_PARENTHESES,
 	TOK_CLOSE_PARENTHESES,
+	TOK_NOT_EQUAL,
 } TokenType;
 
 typedef struct {

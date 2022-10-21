@@ -171,6 +171,18 @@ NodeReturn expression(Token *tokens) {
 
         return variable;
     }
+    else if (strcmp(current_token->value, "if") == 0) {
+        advance_symbol(tokens);
+        if (current_token->type != TOK_OPEN_PARENTHESES) {
+            printf("Expected (\n");
+            exit(1);
+        }
+
+        advance_symbol(tokens);
+
+        NodeReturn if_expression = expression(tokens);
+        return if_expression;
+    }   
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -219,10 +231,9 @@ NodeReturn expression(Token *tokens) {
 
     NodeReturn left = term(tokens);
 
-    while (current_token->type == TOK_PLUS || current_token->type == TOK_MINUS) {
+    while (current_token->type == TOK_PLUS || current_token->type == TOK_MINUS || current_token->type == TOK_NOT_EQUAL) {
         Token op = *current_token;
         advance_symbol(tokens);
-
         NodeReturn right = term(tokens);
 
         left = create_bin_op_node(left, op, right);
@@ -301,14 +312,13 @@ void visit_node(NodeReturn node) {
     }
     else if (node.node_type == STDOUT) {
         visit_stdout_node(node);
-    }    
+    }  
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
 }
 
 void generate_and_visit_node(Token *tokens) {
-
     advance_symbol(tokens);
     NodeReturn node = expression(tokens);
     visit_node(node);
@@ -318,10 +328,6 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     codegen_end();
 }
