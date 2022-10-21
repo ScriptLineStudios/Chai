@@ -14,6 +14,14 @@ void advance_symbol(Token *tokens) {
     current_token = tokens+token_index;
     token_index++;
 }
+void decrement_symbol(Token *tokens) {
+    token_index--;
+    current_token = tokens+token_index;
+}
+
+Token *token_peek(Token *tokens) {
+    return (tokens+token_index); 
+}
 
 NodeReturn return_node(void *node, NodeType node_type) {
     NodeReturn ret;
@@ -24,6 +32,16 @@ NodeReturn return_node(void *node, NodeType node_type) {
 }
 
 int var_index = 0;
+
+NodeReturn create_var_reassign_node(char *var_name, NodeReturn expression, int index) {
+    VarAssign *result = (VarAssign*)malloc(sizeof(VarAssign));
+
+    result->var_name = var_name;
+    result->expression = expression;
+    result->index = index;
+
+    return return_node((void *)result, VARASSIGN);
+}
 
 NodeReturn create_var_assign_node(char *var_name, NodeReturn expression) {
     VarAssign *result = (VarAssign*)malloc(sizeof(VarAssign));
@@ -67,9 +85,18 @@ char *var_names[100];
 int variables = 0;
 
 int isvariable(char *input) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < variables; i++) {
         if (strcmp(input, var_names[i]) == 0) {
             return 1;
+        }
+    }
+    return 0;
+}
+
+int getvariable(char *input) {
+    for (int i = 0; i < variables; i++) {
+        if (strcmp(input, var_names[i]) == 0) {
+            return i;
         }
     }
     return 0;
@@ -120,6 +147,8 @@ NodeReturn term(Token *tokens) {
 }
 
 NodeReturn expression(Token *tokens) {
+    //printf("TOK: %s\n", current_token->value);
+    //printf("TOK PEEK: %s\n", token_peek(tokens)->value);
     if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_IDENT) {
@@ -167,6 +196,25 @@ NodeReturn expression(Token *tokens) {
         }
 
         return res;
+    }
+    else if (isvariable(current_token->value) == 1 && token_peek(tokens)->type == TOK_EQUALS) { //this is different to checking the variable in the term since we need an entire expression
+        char *name = current_token->value;
+        advance_symbol(tokens);
+        //printf("YAY: %s\n", current_token->value);
+        if (current_token->type != TOK_EQUALS) {
+            printf("Expected =");
+            exit(1);
+        }
+
+        advance_symbol(tokens);
+        NodeReturn var_expression = expression(tokens);
+        NodeReturn variable = create_var_reassign_node(name, var_expression, getvariable(name));
+        
+        if (current_token->type != TOK_SEMI) {
+            printf("Expected ;\n");
+            exit(1);
+        }
+        return variable;
     }
 
     NodeReturn left = term(tokens);
@@ -270,6 +318,7 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
