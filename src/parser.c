@@ -395,5 +395,6 @@ void generate_ast(Token *tokens, int ntokens) {
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
+    generate_and_visit_node(tokens);
     codegen_end();
 }
