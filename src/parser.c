@@ -146,6 +146,15 @@ NodeReturn factor(Token *tokens) {
 
         return return_node(use_var, USEVAR);
     }
+
+    else if (current_token->type == TOK_STRING) {
+        String *string = malloc(sizeof(String));
+
+        string->value = current_token->value;
+        advance_symbol(tokens);
+
+        return return_node(string, STRING);
+    }
     return return_node(NULL, NULL_TYPE);
 }
 
@@ -342,6 +351,12 @@ void visit_end_node(NodeReturn node) {
     printf("END");
 }
 
+void visit_string_node(NodeReturn node) {
+    String *string = (String *)node.node;
+    printf(" %s ", string->value);
+    codegen_string(node);
+}
+
 void visit_stdout_node(NodeReturn node) {
     StdOut *stdout = (StdOut *)node.node;
     NodeReturn expr = stdout->expression;
@@ -373,6 +388,9 @@ void visit_node(NodeReturn node) {
     else if (node.node_type == END) {
         visit_end_node(node);
     }  
+    else if (node.node_type == STRING) {
+        visit_string_node(node);
+    }
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
@@ -388,10 +406,6 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);

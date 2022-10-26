@@ -17,6 +17,7 @@ typedef enum {
 	TOK_NOT_EQUAL,
 	TOK_OPEN_CURLY_BRACE,
 	TOK_CLOSE_CURLY_BRACE,
+	TOK_STRING
 } TokenType;
 
 typedef struct {

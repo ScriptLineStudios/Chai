@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "parser.h"
 #include "lexer.h"
 
@@ -10,8 +12,6 @@ void codegen_setup(NodeReturn node) {
 
     fprintf(file_ptr, "global main\n");
     fprintf(file_ptr, "extern printf\n");
-    fprintf(file_ptr, "section .data\n");
-    fprintf(file_ptr, "    x db 0\n");
     fprintf(file_ptr, "section .text\n");
     fprintf(file_ptr, "main:\n");
     fprintf(file_ptr, "    sub rsp, 32\n");
@@ -76,9 +76,30 @@ void codegen_stdout(NodeReturn node) {
     fprintf(file_ptr, "    call printf\n");
 }
 
+char *strings[6400000] = {0}; 
+int number_alloced_strings = 0;
+
+void queue_string_data_gen(char *value) {
+    strings[number_alloced_strings] = value;
+    number_alloced_strings++;
+}
+
+void codegen_string(NodeReturn node) {
+	String *string = (String *)node.node;
+    queue_string_data_gen(string->value);
+    fprintf(file_ptr, "    push string_%d\n", number_alloced_strings - 1);
+}
+
 void codegen_end() {
     fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
     fprintf(file_ptr, "format:\n");
     fprintf(file_ptr, "    db %s, 10, 0", "\"%d\"");   
+    for (int i = 0; i < number_alloced_strings; i++) {
+        printf("STRING VALUE = %s\n", strings[i]);
+        fprintf(file_ptr, "\nstring_%d:\n", i);
+        fprintf(file_ptr, "    db \"%s\", %d, 0\n", strings[i], strlen(strings[i]));
+    }
+    fprintf(file_ptr, "\nsection .data\n");
+    fprintf(file_ptr, "    x db 0\n");
 }

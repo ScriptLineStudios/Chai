@@ -10,6 +10,7 @@ typedef enum {
     STDOUT = 5,
     IF = 6,
     END = 7,
+    STRING = 8,
 } NodeType;
 
 typedef struct {
@@ -23,6 +24,10 @@ typedef struct {
     NodeReturn right;
     int stack_pos;
 } BinOp;
+
+typedef struct {
+    char *value;
+} String;
 
 typedef struct {
     char *var_name;

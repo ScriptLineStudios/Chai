@@ -21,6 +21,23 @@ char *parse_identifier(char *line, int start, int *end, char *res) {
 	return res;
 }
 
+char *parse_string(char *line, int start, int *end, char *res) {
+	int i = start+1;
+	for (; i < strlen(line); i++) {
+        if (line[i] != '"') {
+			printf("%c", line[i]);
+			strncat(res, &line[i], 1);
+        } else {
+        	i++;
+            break;
+        }
+	}
+	printf("\n", line[i]);
+
+	*end = i;
+	return res;
+}
+
 char *parse_integer(char *line, int start, int *end, char *res) {
 	int i = start;
 
@@ -105,6 +122,16 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 					break;
 				}
 				break;
+			case '"': 
+				printf("STRING_START:\n");
+				char *_res = malloc(sizeof(char) * 100);
+				memset(_res, 0, 100);
+				tokens[x].type = TOK_STRING;
+				tokens[x].value = parse_string(line, col, &skip, _res);
+				skip -= col;
+				x++;
+				break;
+
 			case '0':        
 			case '1':
 			case '2':

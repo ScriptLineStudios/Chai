@@ -16,6 +16,8 @@ void codegen_end_node(NodeReturn node);
 void codegen_var(NodeReturn node);
 void codegen_var_use(NodeReturn node);
 
+void codegen_string(NodeReturn node);
+
 //Standard Library
 void codegen_stdout(NodeReturn node);
 

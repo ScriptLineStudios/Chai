@@ -1,39 +1,21 @@
 global main
 extern printf
-section .data
-    x db 0
 section .text
 main:
     sub rsp, 32
-    push 41
+    push string_0
     pop rax
     mov [x+0], rax
-    mov rax, [x+0]
-    push rax
-    push 4
-    push 10
-    pop rax
-    pop rdx
-    mul rdx
-    push rax
-    pop rax
-    pop rbx
-    cmp rax, rbx
-    jne if_0
-    je end_if_0
-if_0:
-    push 5
+    push string_1
     pop rax
     mov [x+8], rax
     mov rax, [x+0]
     push rax
-    push 5
     pop rax
-    pop rbx
-    cmp rax, rbx
-    jne if_1
-    je end_if_1
-if_1:
+    mov rdi, format
+    mov rsi, rax
+    xor rax, rax
+    call printf
     mov rax, [x+8]
     push rax
     pop rax
@@ -41,15 +23,15 @@ if_1:
     mov rsi, rax
     xor rax, rax
     call printf
-end_if_1:
-    push 70
-    pop rax
-    mov rdi, format
-    mov rsi, rax
-    xor rax, rax
-    call printf
-end_if_0:
     add rsp, 32
     ret
 format:
-    db "%d", 10, 0
+    db "%s", 10, 0
+string_0:
+    db "strinsg1", 8 , 0
+
+string_1:
+    db "strinsg2", 8, 0
+
+section .data
+    x db 0
