@@ -25,14 +25,12 @@ char *parse_string(char *line, int start, int *end, char *res) {
 	int i = start+1;
 	for (; i < strlen(line); i++) {
         if (line[i] != '"') {
-			printf("%c", line[i]);
 			strncat(res, &line[i], 1);
         } else {
         	i++;
             break;
         }
 	}
-	printf("\n", line[i]);
 
 	*end = i;
 	return res;
@@ -123,7 +121,6 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				}
 				break;
 			case '"': 
-				printf("STRING_START:\n");
 				char *_res = malloc(sizeof(char) * 100);
 				memset(_res, 0, 100);
 				tokens[x].type = TOK_STRING;

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "parser.h"
 #include "lexer.h"
@@ -49,8 +50,25 @@ void codegen_var(NodeReturn node) {
     fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index) * 8); //push the value onto the stack
 }
 
+void codegen_string_not_equal(NodeReturn node) {
+    BinOp *bin_op = (BinOp *)node.node;
+
+    fprintf(file_ptr, "    pop rax\n"); //Get the addresses of the 2 strings
+    fprintf(file_ptr, "    pop rbx\n"); //Get the addresses of the 2 strings
+
+    fprintf(file_ptr, "    mov rsi, rax\n");
+    fprintf(file_ptr, "    mov rdi, rbx\n");
+    fprintf(file_ptr, "    mov ecx, 6\n");
+
+    
+    fprintf(file_ptr, "    repe cmpsb\n");
+    fprintf(file_ptr, "    jne if_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    je end_if_%d\n", bin_op->stack_pos);
+}
+
 void codegen_not_equal(NodeReturn node) {
-    BinOp *bin_op = (BinOp *)node.node;    
+    BinOp *bin_op = (BinOp *)node.node;
+
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    pop rbx\n");
     fprintf(file_ptr, "    cmp rax, rbx\n");
@@ -96,9 +114,8 @@ void codegen_end() {
     fprintf(file_ptr, "format:\n");
     fprintf(file_ptr, "    db %s, 10, 0", "\"%d\"");   
     for (int i = 0; i < number_alloced_strings; i++) {
-        printf("STRING VALUE = %s\n", strings[i]);
         fprintf(file_ptr, "\nstring_%d:\n", i);
-        fprintf(file_ptr, "    db \"%s\", %d, 0\n", strings[i], strlen(strings[i]));
+        fprintf(file_ptr, "    db \"%s\", %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));
     }
     fprintf(file_ptr, "\nsection .data\n");
     fprintf(file_ptr, "    x db 0\n");

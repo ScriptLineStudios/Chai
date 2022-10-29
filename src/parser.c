@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "lexer.h"
 #include "codegen.h"
@@ -99,6 +100,7 @@ int isnumber(char *input) {
 }
 
 char *var_names[100];
+char *var_types[100];
 int variables = 0;
 
 int isvariable(char *input) {
@@ -184,7 +186,8 @@ NodeReturn expression(Token *tokens) {
         }
 
         char *var_name = current_token->value;
-        var_names[variables++] = var_name;
+        var_names[variables] = var_name;
+
         advance_symbol(tokens);
 
         if (current_token->type != TOK_EQUALS) {
@@ -194,8 +197,15 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
         NodeReturn var_expression = expression(tokens);
 
-        NodeReturn variable = create_var_assign_node(var_name, var_expression);
+        if (var_expression.node_type == STRING) {
+            var_types[variables] = "string";
+        } 
+        else {
+            var_types[variables] = "binop";
+        }
 
+        NodeReturn variable = create_var_assign_node(var_name, var_expression);
+        variables++;
         return variable;
     }
     else if (strcmp(current_token->value, "if") == 0) {
@@ -288,6 +298,7 @@ NodeReturn expression(Token *tokens) {
 }
 
 void visit_node(NodeReturn node);
+NodeType visit_node_and_get_type(NodeReturn node);
  
 void visit_number(NodeReturn node) {
     Number *number = (Number *)node.node;
@@ -306,14 +317,15 @@ void visit_binop(NodeReturn node) {
     BinOp *bin_op = (BinOp *)node.node;    
     NodeReturn left = bin_op->left;
     
-    visit_node(left);
+    NodeType left_type = visit_node_and_get_type(left);
 
     Token op = bin_op->op;
     printf(" %s ", op.value);
 
     NodeReturn right = bin_op->right;
 
-    visit_node(right);
+    NodeType right_type = visit_node_and_get_type(right);
+
     if (op.type == TOK_PLUS) {
         codegen_add(node);
     }
@@ -321,7 +333,30 @@ void visit_binop(NodeReturn node) {
         codegen_mult(node);
     }    
     else if (op.type == TOK_NOT_EQUAL) {
-        codegen_not_equal(node);
+        if (left_type == NUMBER || right_type == NUMBER) {
+            codegen_not_equal(node);
+        }
+        else if (left_type == STRING || right_type == STRING) {
+            codegen_string_not_equal(node);
+        }
+        else if (left_type == USEVAR) {
+            UseVar *left_use_var = (UseVar *)left.node;
+            if (var_types[left_use_var->index] == "string") {
+                codegen_string_not_equal(node);
+            }
+            else {
+                codegen_not_equal(node);
+            }
+        }
+        else if (right_type == USEVAR) {
+            UseVar *right_use_var = (UseVar *)right.node;
+            if (var_types[right_use_var->index] == "string") {
+                codegen_string_not_equal(node);
+            }
+            else {
+                codegen_not_equal(node);
+            }
+        }
     }
 
     printf(")");
@@ -366,6 +401,44 @@ void visit_stdout_node(NodeReturn node) {
     codegen_stdout(expr);
 }
 
+NodeType visit_node_and_get_type(NodeReturn node) {
+    if (node.node_type == BINOP) {
+        visit_binop(node);
+        return node.node_type;
+    }
+    else if (node.node_type == USEVAR) {
+        visit_use_var(node);
+        return node.node_type;
+    }
+    else if (node.node_type == NUMBER) {
+        visit_number(node);
+        return node.node_type;
+    }
+    else if (node.node_type == VARASSIGN) {
+        visit_var_assign_node(node);
+        return node.node_type;
+    }
+    else if (node.node_type == STDOUT) {
+        visit_stdout_node(node);
+        return node.node_type;
+    }  
+    else if (node.node_type == IF) {
+        visit_if_node(node);
+        return node.node_type;
+    }  
+    else if (node.node_type == END) {
+        visit_end_node(node);
+        return node.node_type;
+    }  
+    else if (node.node_type == STRING) {
+        visit_string_node(node);
+        return node.node_type;
+    }
+    else {
+        printf("Unknown type: %d\n", node.node_type);
+    }
+}
+
 void visit_node(NodeReturn node) {
     if (node.node_type == BINOP) {
         visit_binop(node);
@@ -406,6 +479,7 @@ void generate_and_visit_node(Token *tokens) {
 
 void generate_ast(Token *tokens, int ntokens) {
     codegen_setup();
+    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);

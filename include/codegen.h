@@ -10,6 +10,7 @@ void codegen_number(NodeReturn node);
 void codegen_add(NodeReturn node);
 void codegen_mult(NodeReturn node);
 void codegen_not_equal(NodeReturn node);
+void codegen_string_not_equal(NodeReturn node);
 void codegen_if(NodeReturn node);
 void codegen_end_node(NodeReturn node);
 
