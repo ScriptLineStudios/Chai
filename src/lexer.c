@@ -21,6 +21,21 @@ char *parse_identifier(char *line, int start, int *end, char *res) {
 	return res;
 }
 
+char *parse_string(char *line, int start, int *end, char *res) {
+	int i = start+1;
+	for (; i < strlen(line); i++) {
+        if (line[i] != '"') {
+			strncat(res, &line[i], 1);
+        } else {
+        	i++;
+            break;
+        }
+	}
+
+	*end = i;
+	return res;
+}
+
 char *parse_integer(char *line, int start, int *end, char *res) {
 	int i = start;
 
@@ -55,9 +70,12 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				x++;
 				break;
 			case '=': 
-				tokens[x].type = TOK_EQUALS;
-				tokens[x].value = "=";
-				x++;
+				if (line[col-1] != '!') {
+					tokens[x].type = TOK_EQUALS;
+					tokens[x].value = "=";
+					x++;
+					break;
+				}
 				break;
 			case '(':
 				tokens[x].type = TOK_OPEN_PARENTHESES;
@@ -75,7 +93,7 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				x++;
 				break;
             case '*':
-            	tokens[x].type = TOK_MINUS;
+            	tokens[x].type = TOK_MULT;
 				tokens[x].value = "*";
 				x++;
 				break;
@@ -84,6 +102,33 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				tokens[x].value = "/";
 				x++;
 				break;
+			case '{': 
+            	tokens[x].type = TOK_OPEN_CURLY_BRACE;
+				tokens[x].value = "{";
+				x++;
+				break;
+			case '}': 
+            	tokens[x].type = TOK_CLOSE_CURLY_BRACE;
+				tokens[x].value = "}";
+				x++;
+				break;
+			case '!': 
+				if (line[col+1] == '=') {
+					tokens[x].type = TOK_NOT_EQUAL;
+					tokens[x].value = "!=";
+					x++;
+					break;
+				}
+				break;
+			case '"': 
+				char *_res = malloc(sizeof(char) * 100);
+				memset(_res, 0, 100);
+				tokens[x].type = TOK_STRING;
+				tokens[x].value = parse_string(line, col, &skip, _res);
+				skip -= col;
+				x++;
+				break;
+
 			case '0':        
 			case '1':
 			case '2':
