@@ -60,6 +60,7 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 		int skip = 1;
 		line[strcspn(line, "\n")] = 0;
 		for (int col = 0; col < strlen(line); col+=skip, skip=1) {
+			tokens[x].position = x;
 			switch (line[col]) {
 			case ' ':
 			case '\t':

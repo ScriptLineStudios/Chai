@@ -12,6 +12,31 @@ int if_statement_stack = -1;
 
 Token *current_token;
 
+int stack_pointer;
+int *branch_stack;
+
+void setup_stack() {
+    stack_pointer = 0;
+    branch_stack = malloc(sizeof(int) * stack_pointer);
+}
+
+void PUSH(int x) {
+    stack_pointer++;
+    branch_stack = realloc(branch_stack, sizeof(int) * stack_pointer);
+    branch_stack[stack_pointer] = x;
+}
+
+int POP() {
+    int ret = branch_stack[stack_pointer];
+    stack_pointer--;
+    branch_stack = realloc(branch_stack, sizeof(int) * stack_pointer);
+    return ret;
+}
+
+int PEEK() {
+    return branch_stack[stack_pointer];
+}
+
 void advance_symbol(Token *tokens) {
     current_token = tokens+token_index;
     token_index++;
@@ -169,7 +194,7 @@ NodeReturn term(Token *tokens) {
 
         NodeReturn right = factor(tokens);
 
-        left = create_bin_op_node(left, op, right, if_statement_stack);
+        left = create_bin_op_node(left, op, right, PEEK());
     }
     return left;
 }
@@ -217,9 +242,10 @@ NodeReturn expression(Token *tokens) {
 
         advance_symbol(tokens);
 
-        if_statement_stack++;
+        //if_statement_stack++;
+        PUSH(current_token->position);
         NodeReturn if_expression = expression(tokens);
-        NodeReturn if_statement = create_if_node(if_expression, if_statement_stack); //if statement stack can be thought of as a pointer to the top of the stack
+        NodeReturn if_statement = create_if_node(if_expression, PEEK()); //if statement stack can be thought of as a pointer to the top of the stack
         if (current_token->type != TOK_CLOSE_PARENTHESES) {
             printf("Expected )\n");
             exit(1);
@@ -234,8 +260,7 @@ NodeReturn expression(Token *tokens) {
         return if_statement;
     }   
     else if (strcmp(current_token->value, "}") == 0) {
-        int stack_pos = if_statement_stack;
-        if_statement_stack--;
+        int stack_pos = POP();
         NodeReturn res = create_end_node(stack_pos);
         return res;
     }
@@ -292,7 +317,7 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
         NodeReturn right = term(tokens);
 
-        left = create_bin_op_node(left, op, right, if_statement_stack);
+        left = create_bin_op_node(left, op, right, PEEK());
     }
     return left;
 }
@@ -478,6 +503,7 @@ void generate_and_visit_node(Token *tokens) {
 }
 
 void generate_ast(Token *tokens, int ntokens) {
+    setup_stack();
     codegen_setup();
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);

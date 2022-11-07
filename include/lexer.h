@@ -23,7 +23,7 @@ typedef enum {
 typedef struct {
 	TokenType type;
 	char *value;
-	int test;
+	int position;
 } Token;
 
 int lex_file(Token *tokens, FILE *file_ptr);
