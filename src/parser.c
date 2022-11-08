@@ -363,7 +363,7 @@ NodeReturn expression(Token *tokens) {
         // // }
 
         if (if_stack_pointer > 0) {
-            printf("IN AN IF STATEMENT");
+            printf("IN AN IF STATEMENT\n");
             int dropped = POPIF();
 
             NodeReturn res = create_end_node(stack_pos, IF);
@@ -371,7 +371,7 @@ NodeReturn expression(Token *tokens) {
         }
         else if (while_stack_pointer > 0) {
             printf("IN AN WHILE STATEMENT\n");
-            int dropped = POPIF();
+            int dropped = POPWHILE();
             NodeReturn res = create_end_node(stack_pos, WHILE);
             return res;
         }
@@ -633,9 +633,6 @@ void generate_and_visit_node(Token *tokens) {
 void generate_ast(Token *tokens, int ntokens) {
     setup_stack();
     codegen_setup();
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);
     generate_and_visit_node(tokens);

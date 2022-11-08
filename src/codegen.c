@@ -64,8 +64,14 @@ int cleanups = 0;
 
 void codegen_string_not_equal(NodeReturn node) {
     BinOp *bin_op = (BinOp *)node.node;
-    fseek(file_ptr, ftell(file_ptr) - 3, SEEK_SET );
+    
+    NodeReturn left = bin_op->left;
+    NodeReturn right = bin_op->right;
+
     fprintf(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
+    visit_node(left);
+    visit_node(right);
+
     fprintf(file_ptr, "    pop rax\n"); //Get the addresses of the 2 strings
     fprintf(file_ptr, "    pop rbx\n"); //Get the addresses of the 2 strings
 
@@ -77,7 +83,7 @@ void codegen_string_not_equal(NodeReturn node) {
     fprintf(file_ptr, "    repe cmpsb\n");
     fprintf(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
     fprintf(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
-
+    cleanups+=2;
 }
 
 #define MAX_TEMP_BUFFER_SIZE 128
@@ -92,9 +98,6 @@ void codegen_not_equal(NodeReturn node) {
     visit_node(left);
     visit_node(right);
 
-
-    
-    
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    pop rbx\n");
     fprintf(file_ptr, "    cmp rax, rbx\n");    
