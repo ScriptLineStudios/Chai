@@ -11,7 +11,7 @@ An untitled compiler written in C. So far there is is'nt a solid plan other than
     let string_var = "Hello World";
 ```
 
-## Printing to stdout
+## Printing to standard output
 ```
     let var = "Hello, World!";
     stdout(var);
