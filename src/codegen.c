@@ -18,9 +18,12 @@ void codegen_setup(NodeReturn node) {
     fprintf(file_ptr, "    sub rsp, 32\n");
 }
 
+int tok_markers = 0;
+
 void codegen_number(NodeReturn node) {
     Number *number = (Number *)node.node;
     fprintf(file_ptr, "    push %d\n", number->value);
+    tok_markers++;
 }
 
 void codegen_add(NodeReturn node) {
@@ -29,6 +32,7 @@ void codegen_add(NodeReturn node) {
     fprintf(file_ptr, "    pop rbx\n");
     fprintf(file_ptr, "    add rax, rbx\n");
     fprintf(file_ptr, "    push rax\n");
+    tok_markers++;
 }
 
 void codegen_mult(NodeReturn node) {
@@ -36,12 +40,14 @@ void codegen_mult(NodeReturn node) {
     fprintf(file_ptr, "    pop rdx\n");
     fprintf(file_ptr, "    mul rdx\n");
     fprintf(file_ptr, "    push rax\n");
+    tok_markers++;
 }
 
 void codegen_var_use(NodeReturn node) {
     UseVar *use_var = (UseVar *)node.node;
     fprintf(file_ptr, "    mov rax, [x+%d]\n", (use_var->index) * 8);
     fprintf(file_ptr, "    push rax\n");
+    tok_markers++;
 }
 
 void codegen_var(NodeReturn node) {
@@ -50,9 +56,16 @@ void codegen_var(NodeReturn node) {
     fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index) * 8); //push the value onto the stack
 }
 
+
+#define CMP_BUFFER 65525
+char *cmp_buffer;
+
+int cleanups = 0;
+
 void codegen_string_not_equal(NodeReturn node) {
     BinOp *bin_op = (BinOp *)node.node;
-
+    fseek(file_ptr, ftell(file_ptr) - 3, SEEK_SET );
+    fprintf(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
     fprintf(file_ptr, "    pop rax\n"); //Get the addresses of the 2 strings
     fprintf(file_ptr, "    pop rbx\n"); //Get the addresses of the 2 strings
 
@@ -62,28 +75,54 @@ void codegen_string_not_equal(NodeReturn node) {
 
     
     fprintf(file_ptr, "    repe cmpsb\n");
-    fprintf(file_ptr, "    jne if_%d\n", bin_op->stack_pos);
-    fprintf(file_ptr, "    je end_if_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
+
 }
+
+#define MAX_TEMP_BUFFER_SIZE 128
 
 void codegen_not_equal(NodeReturn node) {
     BinOp *bin_op = (BinOp *)node.node;
 
+    NodeReturn left = bin_op->left;
+    NodeReturn right = bin_op->right;
+
+    fprintf(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
+    visit_node(left);
+    visit_node(right);
+
+
+    
+    
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    pop rbx\n");
-    fprintf(file_ptr, "    cmp rax, rbx\n");
-    fprintf(file_ptr, "    jne if_%d\n", bin_op->stack_pos);
-    fprintf(file_ptr, "    je end_if_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    cmp rax, rbx\n");    
+    fprintf(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
+    fprintf(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
+    cleanups += 2;
+}
+
+void codegen_while_node(NodeReturn node) {
+    WhileNode *while_node = (WhileNode *)node.node;
+    fprintf(file_ptr, "branch_%d:\n", while_node->stack_pos);
 }
 
 void codegen_if(NodeReturn node) {
     IfNode *if_node = (IfNode *)node.node;
-    fprintf(file_ptr, "if_%d:\n", if_node->stack_pos);
+    fprintf(file_ptr, "branch_%d:\n", if_node->stack_pos);
 }
+
 
 void codegen_end_node(NodeReturn node) {
     End *end_node = (End *)node.node;
-    fprintf(file_ptr, "end_if_%d:\n", end_node->stack_pos);
+    if (end_node->ending == IF) {
+        fprintf(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
+    }
+    else if (end_node->ending == WHILE) {
+        fprintf(file_ptr, "    jmp comp_%d\n", end_node->stack_pos);
+        fprintf(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
+    }
 }
 
 void codegen_stdout(NodeReturn node) {
@@ -109,6 +148,9 @@ void codegen_string(NodeReturn node) {
 }
 
 void codegen_end() {
+    for (int i = 0; i < cleanups; i++) {
+        fprintf(file_ptr, "    pop rax\n");
+    }
     fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
     fprintf(file_ptr, "format:\n");

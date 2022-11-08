@@ -11,11 +11,13 @@ typedef enum {
     IF = 6,
     END = 7,
     STRING = 8,
+    WHILE = 9
 } NodeType;
 
 typedef struct {
     void *node;
     NodeType node_type;
+    int position;
 } NodeReturn;
 
 typedef struct {
@@ -50,7 +52,13 @@ typedef struct {
 } IfNode;
 
 typedef struct {
+    NodeReturn expression;
     int stack_pos;
+} WhileNode;
+
+typedef struct {
+    int stack_pos;
+    NodeType ending;
 } End;
 
 typedef struct {
@@ -58,3 +66,4 @@ typedef struct {
 } Number;
 
 void generate_ast(Token *tokens, int ntokens);
+void visit_node(NodeReturn node);

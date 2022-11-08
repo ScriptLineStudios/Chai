@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "lexer.h"
 #include "codegen.h"
@@ -15,9 +16,21 @@ Token *current_token;
 int stack_pointer;
 int *branch_stack;
 
+int if_stack_pointer;
+int *if_stack;
+
+int while_stack_pointer;
+int *while_stack;
+
 void setup_stack() {
     stack_pointer = 0;
     branch_stack = malloc(sizeof(int) * stack_pointer);
+
+    if_stack_pointer = 0;
+    if_stack = malloc(sizeof(int) * if_stack_pointer); //TODO: FINISH THIS STACK!!!
+
+    while_stack_pointer = 0;
+    while_stack = malloc(sizeof(int) * while_stack_pointer);
 }
 
 void PUSH(int x) {
@@ -37,6 +50,40 @@ int PEEK() {
     return branch_stack[stack_pointer];
 }
 
+void PUSHIF(int x) {
+    if_stack_pointer++;
+    if_stack = realloc(if_stack, sizeof(int) * if_stack_pointer);
+    if_stack[if_stack_pointer] = x;
+}
+
+int POPIF() {
+    int ret = if_stack[if_stack_pointer];
+    if_stack_pointer--;
+    if_stack = realloc(if_stack, sizeof(int) * if_stack_pointer);
+    return ret;
+}
+
+int PEEKIF() {
+    return if_stack[if_stack_pointer];
+}
+
+void PUSHWHILE(int x) {
+    while_stack_pointer++;
+    while_stack = realloc(while_stack, sizeof(int) * while_stack_pointer);
+    while_stack[while_stack_pointer] = x;
+}
+
+int POPWHILE() {
+    int ret = while_stack[while_stack_pointer];
+    while_stack_pointer--;
+    while_stack = realloc(while_stack, sizeof(int) * while_stack_pointer);
+    return ret;
+}
+
+int PEEKWHILE() {
+    return while_stack[while_stack_pointer];
+}
+
 void advance_symbol(Token *tokens) {
     current_token = tokens+token_index;
     token_index++;
@@ -54,6 +101,7 @@ NodeReturn return_node(void *node, NodeType node_type) {
     NodeReturn ret;
     ret.node = node;
     ret.node_type = node_type;
+    ret.position = current_token->position;
 
     return ret;
 }
@@ -93,6 +141,14 @@ NodeReturn create_bin_op_node(NodeReturn left, Token op, NodeReturn right, int s
     return return_node((void *)result, BINOP);
 }
 
+NodeReturn create_while_node(NodeReturn expression, int stack_pos) {
+    WhileNode *result = (WhileNode*)malloc(sizeof(WhileNode));
+
+    result->expression = expression;
+    result->stack_pos = stack_pos;
+    return return_node((void *)result, WHILE);
+}
+
 NodeReturn create_if_node(NodeReturn expression, int stack_pos) {
     IfNode *result = (IfNode*)malloc(sizeof(IfNode));
 
@@ -108,9 +164,10 @@ NodeReturn create_stdout_node(NodeReturn expr) {
     return return_node((void *)result, STDOUT);
 }
 
-NodeReturn create_end_node(int stack_pos) {
+NodeReturn create_end_node(int stack_pos, NodeType ending) {
     End *result = (End*)malloc(sizeof(End));
     result->stack_pos = stack_pos;
+    result->ending = ending;
     return return_node((void *)result, END);
 }
 
@@ -199,6 +256,8 @@ NodeReturn term(Token *tokens) {
     return left;
 }
 
+bool parsingIf = false;
+bool parsingWhile = false;
 
 NodeReturn expression(Token *tokens) {
     //printf("TOK: %s\n", current_token->value);
@@ -233,6 +292,32 @@ NodeReturn expression(Token *tokens) {
         variables++;
         return variable;
     }
+    else if (strcmp(current_token->value, "while") == 0) {
+        advance_symbol(tokens);
+        if (current_token->type != TOK_OPEN_PARENTHESES) {
+            printf("Expected (\n");
+            exit(1);
+        }
+        advance_symbol(tokens);
+
+        PUSH(current_token->position);
+
+        NodeReturn while_expression = expression(tokens);
+        NodeReturn while_statement = create_while_node(while_expression, PEEK());
+        if (current_token->type != TOK_CLOSE_PARENTHESES) {
+            printf("Expected )\n");
+            exit(1);
+        }
+
+        advance_symbol(tokens);
+        if (current_token->type != TOK_OPEN_CURLY_BRACE) {
+            printf("Expected {\n");
+            exit(1);
+        }
+        parsingWhile = true;
+        PUSHWHILE(1);
+        return while_statement;
+    }
     else if (strcmp(current_token->value, "if") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -256,13 +341,40 @@ NodeReturn expression(Token *tokens) {
             printf("Expected {\n");
             exit(1);
         }
-
+        parsingIf = true;
+        PUSHIF(1);
         return if_statement;
     }   
     else if (strcmp(current_token->value, "}") == 0) {
         int stack_pos = POP();
-        NodeReturn res = create_end_node(stack_pos);
-        return res;
+        // if (parsingIf == true) {
+        //     NodeReturn res = create_end_node(stack_pos, IF);
+        //     parsingIf = false;
+        //     return res;
+        // }
+        // else if (parsingWhile == true) {
+        //     NodeReturn res = create_end_node(stack_pos, WHILE);
+        //     parsingWhile = false;
+        //     return res;
+        // }
+        // // else {
+        // //     printf("Sorry an error has occurred\n");
+        // //     exit(1);
+        // // }
+
+        if (if_stack_pointer > 0) {
+            printf("IN AN IF STATEMENT");
+            int dropped = POPIF();
+
+            NodeReturn res = create_end_node(stack_pos, IF);
+            return res;
+        }
+        else if (while_stack_pointer > 0) {
+            printf("IN AN WHILE STATEMENT\n");
+            int dropped = POPIF();
+            NodeReturn res = create_end_node(stack_pos, WHILE);
+            return res;
+        }
     }
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
@@ -426,6 +538,15 @@ void visit_stdout_node(NodeReturn node) {
     codegen_stdout(expr);
 }
 
+void visit_while_node(NodeReturn node) {
+    WhileNode *while_node = (WhileNode *)node.node;
+    NodeReturn expr = while_node->expression;
+    printf("WHILE: ");
+
+    visit_node(expr);
+    codegen_while_node(node);
+}
+
 NodeType visit_node_and_get_type(NodeReturn node) {
     if (node.node_type == BINOP) {
         visit_binop(node);
@@ -459,6 +580,10 @@ NodeType visit_node_and_get_type(NodeReturn node) {
         visit_string_node(node);
         return node.node_type;
     }
+    else if (node.node_type == WHILE) {
+        visit_while_node(node);
+        return node.node_type;
+    }
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
@@ -488,6 +613,9 @@ void visit_node(NodeReturn node) {
     }  
     else if (node.node_type == STRING) {
         visit_string_node(node);
+    }
+    else if (node.node_type == WHILE) {
+        visit_while_node(node);
     }
     else {
         printf("Unknown type: %d\n", node.node_type);
