@@ -133,9 +133,17 @@ void codegen_end_node(NodeReturn node) {
     }
 }
 
-void codegen_stdout(NodeReturn node) {
+void codegen_stdout(NodeType type) {
+    printf("TYPE = %d\n", type);
+
     fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    mov rdi, format\n");
+    if (type == NUMBER) {
+        fprintf(file_ptr, "    mov rdi, format\n");
+    }
+    else {
+        fprintf(file_ptr, "    mov rdi, string_format\n");
+    }
+        
     fprintf(file_ptr, "    mov rsi, rax\n");
     fprintf(file_ptr, "    xor rax, rax\n");
     fprintf(file_ptr, "    call printf\n");
@@ -165,7 +173,10 @@ void codegen_end() {
     fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
     fprintf(file_ptr, "format:\n");
-    fprintf(file_ptr, "    db %s, 10, 0", "\"%d\"");   
+    fprintf(file_ptr, "    db %s, 10, 0\n", "\"%d\"");
+    fprintf(file_ptr, "string_format:\n");
+    fprintf(file_ptr, "    db %s, 10, 0\n", "\"%s\"");   
+    
     for (int i = 0; i < number_alloced_strings; i++) {
         fprintf(file_ptr, "\nstring_%d:\n", i);
         fprintf(file_ptr, "    db \"%s\", %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));

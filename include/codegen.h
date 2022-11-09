@@ -23,6 +23,6 @@ void codegen_var_use(NodeReturn node);
 void codegen_string(NodeReturn node);
 
 //Standard Library
-void codegen_stdout(NodeReturn node);
+void codegen_stdout(NodeType type);
 
 #endif

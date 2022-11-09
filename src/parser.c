@@ -12,6 +12,7 @@ int token_index = 0;
 int if_statement_stack = -1;
 
 Token *current_token;
+int number_tokens = 0;
 
 int stack_pointer;
 int *branch_stack;
@@ -21,6 +22,8 @@ int *if_stack;
 
 int while_stack_pointer;
 int *while_stack;
+
+bool compile_complete = false;
 
 void setup_stack() {
     stack_pointer = 0;
@@ -87,6 +90,9 @@ int PEEKWHILE() {
 void advance_symbol(Token *tokens) {
     current_token = tokens+token_index;
     token_index++;
+    if (current_token->position + 1 == number_tokens) {
+        compile_complete = true;
+    }
 }
 void decrement_symbol(Token *tokens) {
     token_index--;
@@ -532,10 +538,9 @@ void visit_string_node(NodeReturn node) {
 void visit_stdout_node(NodeReturn node) {
     StdOut *stdout = (StdOut *)node.node;
     NodeReturn expr = stdout->expression;
-
     printf("STDOUT: ");
-    visit_node(expr);
-    codegen_stdout(expr);
+    NodeType type = visit_node_and_get_type(expr);
+    codegen_stdout(type);
 }
 
 void visit_while_node(NodeReturn node) {
@@ -585,7 +590,7 @@ NodeType visit_node_and_get_type(NodeReturn node) {
         return node.node_type;
     }
     else {
-        printf("Unknown type: %d\n", node.node_type);
+        printf("Unknown type in getting type: %d\n", node.node_type);
     }
 }
 
@@ -631,10 +636,12 @@ void generate_and_visit_node(Token *tokens) {
 }
 
 void generate_ast(Token *tokens, int ntokens) {
+    number_tokens = ntokens;
     setup_stack();
     codegen_setup();
-    for (int i = 0; i < 17; i++) {
+    printf("ntok = %d\n", ntokens);
+    while (!compile_complete) 
         generate_and_visit_node(tokens);
-    }
     codegen_end();
+    printf("----- COMPILATION SUCCESSFULL! -----\n");
 }

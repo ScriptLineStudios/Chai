@@ -10,7 +10,7 @@ char *parse_identifier(char *line, int start, int *end, char *res) {
 	int i = start;
 
 	for (; i < strlen(line); i++) {
-        if (isalnum(line[i])) {
+        if (isalnum(line[i]) || line[i] == '_') {
 			strncat(res, &line[i], 1);
         } else {
             break;

@@ -67,3 +67,5 @@ typedef struct {
 
 void generate_ast(Token *tokens, int ntokens);
 void visit_node(NodeReturn node);
+NodeType visit_node_and_get_type(NodeReturn node);
+
