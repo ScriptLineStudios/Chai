@@ -3,6 +3,8 @@
 
 #include "parser.h"
 
+FILE *get_file_ptr();
+
 void codegen_setup();
 void codegen_end();
 

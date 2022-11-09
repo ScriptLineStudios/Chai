@@ -633,10 +633,8 @@ void generate_and_visit_node(Token *tokens) {
 void generate_ast(Token *tokens, int ntokens) {
     setup_stack();
     codegen_setup();
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
-    generate_and_visit_node(tokens);
+    for (int i = 0; i < 17; i++) {
+        generate_and_visit_node(tokens);
+    }
     codegen_end();
 }

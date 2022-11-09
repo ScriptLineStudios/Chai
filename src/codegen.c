@@ -8,6 +8,11 @@
 
 int pushes;
 FILE *file_ptr;
+
+FILE *get_file_ptr() {
+    return file_ptr;
+}
+
 void codegen_setup(NodeReturn node) {
     file_ptr = fopen("code.asm", "w");
 
@@ -154,6 +159,9 @@ void codegen_end() {
     for (int i = 0; i < cleanups; i++) {
         fprintf(file_ptr, "    pop rax\n");
     }
+    fprintf(file_ptr, "    mov rax, 60\n");
+    fprintf(file_ptr, "    syscall\n");
+
     fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
     fprintf(file_ptr, "format:\n");
