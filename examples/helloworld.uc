@@ -1,2 +1,2 @@
-let str = "Hi!";
-stdout(str);
+stdout("Hello");
+stdout("World");

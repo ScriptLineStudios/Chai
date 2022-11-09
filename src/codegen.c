@@ -145,6 +145,7 @@ void codegen_stdout(NodeType type) {
     }
         
     fprintf(file_ptr, "    mov rsi, rax\n");
+    fprintf(file_ptr, "    mov al,0\n");
     fprintf(file_ptr, "    xor rax, rax\n");
     fprintf(file_ptr, "    call printf\n");
 }
@@ -179,7 +180,7 @@ void codegen_end() {
     
     for (int i = 0; i < number_alloced_strings; i++) {
         fprintf(file_ptr, "\nstring_%d:\n", i);
-        fprintf(file_ptr, "    db \"%s\", %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));
+        fprintf(file_ptr, "    db `%s`, %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));
     }
     fprintf(file_ptr, "\nsection .data\n");
     fprintf(file_ptr, "    x db 0\n");
