@@ -3,6 +3,13 @@
 
 An untitled compiler written in C. So far there is is'nt a solid plan other than to make a simple language :)
 
+# Getting Started
+```
+1. git clone https://github.com/ScriptLineStudios/Untitled-Compiler
+2. make
+3. ./bin/comp.exe examples/strings.uc
+```
+
 # Language Reference
 
 ## Variables
