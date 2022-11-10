@@ -39,3 +39,12 @@ An untitled compiler written in C. So far there is is'nt a solid plan other than
         stdout(90);
     }
 ```
+
+## Lists
+```
+    let lst = [1, 2, 3, 4, 5];
+    let i = 0;
+    while (i != 5) {
+        stdout(lst[i]);
+    }
+```
