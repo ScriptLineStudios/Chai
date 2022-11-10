@@ -40,11 +40,21 @@ An untitled compiler written in C. So far there is is'nt a solid plan other than
     }
 ```
 
+## While loops
+```
+let foo = 0;
+while (foo != 100) {
+    stdout(foo);
+    foo = foo + 1;
+}
+```
+
 ## Lists
 ```
     let lst = [1, 2, 3, 4, 5];
     let i = 0;
     while (i != 5) {
         stdout(lst[i]);
+        i = i + 1;
     }
 ```
