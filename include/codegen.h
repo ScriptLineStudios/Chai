@@ -16,6 +16,9 @@ void codegen_string_not_equal(NodeReturn node);
 void codegen_if(NodeReturn node);
 void codegen_end_node(NodeReturn node);
 void codegen_while_node(NodeReturn node);
+void codegen_list(NodeReturn node);
+void codegen_list_access(NodeReturn node);
+void codegen_list_reassign(NodeReturn node);
 
 void codegen_var(NodeReturn node);
 void codegen_var_use(NodeReturn node);
@@ -23,6 +26,6 @@ void codegen_var_use(NodeReturn node);
 void codegen_string(NodeReturn node);
 
 //Standard Library
-void codegen_stdout(NodeType type);
+void codegen_stdout(NodeReturn node, NodeType type);
 
 #endif

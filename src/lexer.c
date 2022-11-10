@@ -88,6 +88,21 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 				tokens[x].value = ")";
 				x++;
 				break;
+			case '[':
+				tokens[x].type = TOK_OPEN_SQUARE_BRACKET;
+				tokens[x].value = "[";
+				x++;
+				break;
+			case ']': 
+				tokens[x].type = TOK_CLOSE_SQUARE_BRACKET;
+				tokens[x].value = "]";
+				x++;
+				break;
+			case ',': 
+				tokens[x].type = TOK_COMMA;
+				tokens[x].value = ",";
+				x++;
+				break;
 			case '+':
 				tokens[x].type = TOK_PLUS;
 				tokens[x].value = "+";

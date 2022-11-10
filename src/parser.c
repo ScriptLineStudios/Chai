@@ -217,6 +217,8 @@ int getvariableindex(char *input) {
     }
 }
 
+NodeReturn expression(Token *tokens);
+
 NodeReturn factor(Token *tokens) {
     Number *number = (Number*)malloc(sizeof(Number));
 
@@ -231,11 +233,46 @@ NodeReturn factor(Token *tokens) {
         UseVar *use_var = (UseVar*)malloc(sizeof(UseVar));
         use_var->name = current_token->value;
         use_var->index = getvariableindex(current_token->value);
-
         advance_symbol(tokens);
+        if (strcmp(current_token->value, "[") == 0) {
+            advance_symbol(tokens);
+            NodeReturn expr = expression(tokens);
+            if (strcmp(current_token->value, "]") != 0) {
+                printf("Expected ]\n");
+                exit(1);
+            }
+            advance_symbol(tokens);
+            if (strcmp(current_token->value, "=") == 0) {
+                ListReassign *list_reassign = (ListReassign*)malloc(sizeof(ListReassign));
+                advance_symbol(tokens);
+                NodeReturn assignment = expression(tokens);
+                if (strcmp(current_token->value, ";") != 0) {
+                    printf("Expected semicolon!");
+                    exit(1);
+                }
+                list_reassign->expression = expr;
+                list_reassign->assignment = assignment;
+                list_reassign->name = use_var->name;
+                list_reassign->index = use_var->index;
+                return return_node(list_reassign, LISTREASSIGN);
+            }
+            else {
+                ListAccess *list_access = (ListAccess*)malloc(sizeof(ListAccess));
+                list_access->expression = expr;
+                list_access->name = use_var->name;
+                list_access->index = use_var->index;
+                return return_node(list_access, LISTACCESS);
+            }
+        }
 
         return return_node(use_var, USEVAR);
     }
+
+
+    // else if (isvariable(current_token->value) == 1 && strcmp(token_peek(tokens)->value, "[") == 0) {
+    //     ListAccess *list_access = (ListAccess*)malloc(sizeof(ListAccess));
+    //     advance_symbol(tokens);
+    // }
 
     else if (current_token->type == TOK_STRING) {
         String *string = malloc(sizeof(String));
@@ -245,6 +282,9 @@ NodeReturn factor(Token *tokens) {
 
         return return_node(string, STRING);
     }
+
+
+    printf("\nCould not find type: %s", current_token->value);
     return return_node(NULL, NULL_TYPE);
 }
 
@@ -265,9 +305,56 @@ NodeReturn term(Token *tokens) {
 bool parsingIf = false;
 bool parsingWhile = false;
 
+int is_int(char *scan) {
+    int len = strlen(scan);
+    for (int i = 0; i < len; i++) {
+        if (!isdigit(scan[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+List *lists[1000];
+int num_lists = 0;
+
+NodeReturn update_old_list(Token *tokens, List *list) {
+    list->size = 0;
+    list->values = realloc(list->values, list->size * sizeof(char **));
+
+    advance_symbol(tokens);
+    while (strcmp(current_token->value, ";") != 0) {
+        if (is_int(current_token->value)) {
+            list->values[list->size] = current_token->value;
+            list->size++;
+            list->values = realloc(list->values, list->size * sizeof(char **));
+        }
+        advance_symbol(tokens);
+    }
+}
+
+NodeReturn create_new_list(Token *tokens) {
+    printf("----- Beginning Search For New List Elements! -----\n");
+    
+    List *list = (List*)malloc(sizeof(List));
+    list->size = 0;
+    list->values = malloc(sizeof(char **) * 100);
+    
+    advance_symbol(tokens);
+    while (strcmp(current_token->value, ";") != 0) {
+        if (is_int(current_token->value)) {
+            assert(list->size < 100);
+            list->values[list->size] = current_token->value;
+            list->size++;
+        }
+        advance_symbol(tokens);
+    }
+    lists[variables] = list;
+    return return_node((void *)list, LIST);
+}
+
 NodeReturn expression(Token *tokens) {
-    //printf("TOK: %s\n", current_token->value);
-    //printf("TOK PEEK: %s\n", token_peek(tokens)->value);
     if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_IDENT) {
@@ -285,11 +372,22 @@ NodeReturn expression(Token *tokens) {
             exit(1);
         }
         advance_symbol(tokens);
-        NodeReturn var_expression = expression(tokens);
-
+        
+        NodeReturn var_expression;
+        if (current_token->type == TOK_OPEN_SQUARE_BRACKET) {
+            printf("Found the start of a list!\n");
+            var_expression = create_new_list(tokens);
+        }
+        else {
+            var_expression = expression(tokens);
+        }
+    
         if (var_expression.node_type == STRING) {
             var_types[variables] = "string";
         } 
+        else if (var_expression.node_type == LIST) {
+            var_types[variables] = "list";
+        }
         else {
             var_types[variables] = "binop";
         }
@@ -351,6 +449,7 @@ NodeReturn expression(Token *tokens) {
         PUSHIF(1);
         return if_statement;
     }   
+
     else if (strcmp(current_token->value, "}") == 0) {
         int stack_pos = POP();
         // if (parsingIf == true) {
@@ -408,7 +507,19 @@ NodeReturn expression(Token *tokens) {
 
         return res;
     }
+    // else if (isvariable(current_token->value) == 1 && token_peek(tokens)->type == TOK_OPEN_SQUARE_BRACKET) {
+    //     advance_symbol(tokens);
+    //     char *name = current_token->value;
+    //     printf("got name: %s\n", name);
+    //     advance_symbol(tokens);
+    //     NodeReturn expr = expression(tokens);
+    //     if (current_token->type != TOK_CLOSE_SQUARE_BRACKET) {
+    //         printf("Expected ]");
+    //         exit(1);
+    //     }
+    // }
     else if (isvariable(current_token->value) == 1 && token_peek(tokens)->type == TOK_EQUALS) { //this is different to checking the variable in the term since we need an entire expression
+        
         char *name = current_token->value;
         advance_symbol(tokens);
         //printf("YAY: %s\n", current_token->value);
@@ -418,7 +529,17 @@ NodeReturn expression(Token *tokens) {
         }
 
         advance_symbol(tokens);
-        NodeReturn var_expression = expression(tokens);
+        NodeReturn var_expression;
+
+        if (current_token->type == TOK_OPEN_SQUARE_BRACKET) {
+            printf("okay world");
+            if (strcmp(var_types[getvariable(current_token->value)], "list") == 0) {
+                var_expression = update_old_list(tokens, lists[getvariable(current_token->value)]);
+            }
+        }
+        else {
+            var_expression = expression(tokens);
+        }
         NodeReturn variable = create_var_reassign_node(name, var_expression, getvariable(name));
         
         if (current_token->type != TOK_SEMI) {
@@ -540,7 +661,7 @@ void visit_stdout_node(NodeReturn node) {
     NodeReturn expr = stdout->expression;
     printf("STDOUT: ");
     NodeType type = visit_node_and_get_type(expr);
-    codegen_stdout(type);
+    codegen_stdout(expr, type);
 }
 
 void visit_while_node(NodeReturn node) {
@@ -550,6 +671,38 @@ void visit_while_node(NodeReturn node) {
 
     visit_node(expr);
     codegen_while_node(node);
+}
+
+void visit_list_node(NodeReturn node) {
+    List *list = (List *)node.node;
+    printf("[");
+    for (int i = 0; i < list->size; i++) {
+        printf("%s, ", list->values[i]);
+    }
+    printf("]");
+    codegen_list(node);
+}
+
+void visit_list_access_node(NodeReturn node) {
+    ListAccess *list_access = (ListAccess *)node.node;
+    NodeReturn expr = list_access->expression;
+
+    printf(" %s->", list_access->name);
+    visit_node(expr);
+    codegen_list_access(node);
+}
+
+void visit_list_reassign_node(NodeReturn node) {
+    ListReassign *list_reassign = (ListReassign*)node.node;
+    NodeReturn expr = list_reassign->expression;
+    NodeReturn assignment = list_reassign->assignment;
+
+    printf("LIST REASSIGN (%s->", list_reassign->name);
+    visit_node(expr);
+    printf("=");
+    visit_node(assignment);
+    printf(")");
+    codegen_list_reassign(node);
 }
 
 NodeType visit_node_and_get_type(NodeReturn node) {
@@ -589,6 +742,18 @@ NodeType visit_node_and_get_type(NodeReturn node) {
         visit_while_node(node);
         return node.node_type;
     }
+    else if (node.node_type == LIST) {
+        visit_list_node(node);
+        return node.node_type;
+    }
+    else if (node.node_type == LISTACCESS) {
+        visit_list_access_node(node);
+        return node.node_type;
+    }
+    else if (node.node_type == LISTREASSIGN) {
+        visit_list_reassign_node(node);
+        return node.node_type;
+    }
     else {
         printf("Unknown type in getting type: %d\n", node.node_type);
     }
@@ -621,6 +786,15 @@ void visit_node(NodeReturn node) {
     }
     else if (node.node_type == WHILE) {
         visit_while_node(node);
+    }
+    else if (node.node_type == LIST) {
+        visit_list_node(node);
+    }
+    else if (node.node_type == LISTACCESS) {
+        visit_list_access_node(node);
+    }
+    else if (node.node_type == LISTREASSIGN) {
+        visit_list_reassign_node(node);
     }
     else {
         printf("Unknown type: %d\n", node.node_type);

@@ -1,2 +1,1 @@
-stdout("Hello");
-stdout("World");
+stdout("Hello World");

@@ -26,6 +26,7 @@ void codegen_setup(NodeReturn node) {
 int tok_markers = 0;
 
 void codegen_number(NodeReturn node) {
+    fprintf(file_ptr, ";; --- Number\n");
     Number *number = (Number *)node.node;
     fprintf(file_ptr, "    push %d\n", number->value);
     tok_markers++;
@@ -48,17 +49,32 @@ void codegen_mult(NodeReturn node) {
     tok_markers++;
 }
 
+int num_list_offset = -1;
 void codegen_var_use(NodeReturn node) {
     UseVar *use_var = (UseVar *)node.node;
-    fprintf(file_ptr, "    mov rax, [x+%d]\n", (use_var->index) * 8);
+    fprintf(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
     fprintf(file_ptr, "    push rax\n");
     tok_markers++;
 }
 
 void codegen_var(NodeReturn node) {
+    fprintf(file_ptr, ";; --- Var\n");
+
     VarAssign *var = (VarAssign *)node.node;
-    fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index) * 8); //push the value onto the stack
+    NodeReturn expr = var->expression;
+    if (expr.node_type == LIST) {
+        List *list = (List *)expr.node;
+        for (int i = 0; i < list->size; i++) {
+            fprintf(file_ptr, "    pop rax\n");
+            fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index+i) * 8); //push the value onto the stack
+            num_list_offset++;
+        }
+    }
+    else {
+        fprintf(file_ptr, "    pop rax\n");
+        fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index+num_list_offset) * 8); //push the value onto the stack
+    }
+
 }
 
 
@@ -133,11 +149,17 @@ void codegen_end_node(NodeReturn node) {
     }
 }
 
-void codegen_stdout(NodeType type) {
-    printf("TYPE = %d\n", type);
+void codegen_stdout(NodeReturn node, NodeType type) {
+    fprintf(file_ptr, ";; --- Stdout Start\n");
 
     fprintf(file_ptr, "    pop rax\n");
     if (type == NUMBER) {
+        fprintf(file_ptr, "    mov rdi, format\n");
+    }
+    else if (type == USEVAR) {
+        fprintf(file_ptr, "    mov rdi, format\n");
+    }
+    else if (type == LISTACCESS) {
         fprintf(file_ptr, "    mov rdi, format\n");
     }
     else {
@@ -162,6 +184,30 @@ void codegen_string(NodeReturn node) {
 	String *string = (String *)node.node;
     queue_string_data_gen(string->value);
     fprintf(file_ptr, "    push string_%d\n", number_alloced_strings - 1);
+}
+
+void codegen_list(NodeReturn node) {
+    List *list = (List *)node.node;
+
+    for (int i = list->size - 1; i >= 0; i--) {
+        fprintf(file_ptr, "    push %d\n", atoi(list->values[i]));
+    }
+}
+
+void codegen_list_access(NodeReturn node) {
+    fprintf(file_ptr, ";; --- List Access\n");
+    ListAccess *list_access = (ListAccess *)node.node;
+    fprintf(file_ptr, "    pop rbx\n");
+    fprintf(file_ptr, "    mov rax, [x+%d+rbx*8]\n", (list_access->index) * 8);
+    fprintf(file_ptr, "    push rax\n");
+}
+
+void codegen_list_reassign(NodeReturn node) {
+    ListReassign *list_reassign = (ListReassign *)node.node;
+    fprintf(file_ptr, ";; --- List Reassign\n");
+    fprintf(file_ptr, "    pop rax\n"); // this is the value
+    fprintf(file_ptr, "    pop rbx\n"); // this is the index
+    fprintf(file_ptr, "    mov [x+%d+rbx*8], rax\n", (list_reassign->index) * 8);
 }
 
 void codegen_end() {

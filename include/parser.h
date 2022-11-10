@@ -11,14 +11,24 @@ typedef enum {
     IF = 6,
     END = 7,
     STRING = 8,
-    WHILE = 9
+    WHILE = 9,
+    LIST = 10,
+    LISTACCESS = 11,
+    LISTREASSIGN = 12,
 } NodeType;
+
+//be hold the list of nodes
 
 typedef struct {
     void *node;
     NodeType node_type;
     int position;
 } NodeReturn;
+
+typedef struct {    
+    char **values;
+    int size;
+} List;
 
 typedef struct {
     NodeReturn left;
@@ -41,6 +51,19 @@ typedef struct {
     char *name;
     int index;
 } UseVar;
+
+typedef struct {
+    char *name;
+    int index;
+    NodeReturn expression;
+} ListAccess;
+
+typedef struct {
+    char *name;
+    int index;
+    NodeReturn expression;
+    NodeReturn assignment;
+} ListReassign;
 
 typedef struct {
     NodeReturn expression;
