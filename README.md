@@ -3,6 +3,15 @@
 
 An untitled compiler written in C. So far there is is'nt a solid plan other than to make a simple language :)
 
+# Compilation Targets
+
+# In Development
+- Intel x86_64 Linux - Being implemented by ScriptLine
+- Intel x86_64 Windows - Being implmented by MousieDev
+
+# Planned
+- WASM
+
 # Getting Started
 ```
 1. git clone https://github.com/ScriptLineStudios/Untitled-Compiler
