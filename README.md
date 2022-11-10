@@ -1,15 +1,14 @@
 # Untitled-Compiler
-![Lines of code](https://img.shields.io/tokei/lines/github/ScriptLineStudios/Untitled-Compiler)
 
 An untitled compiler written in C. So far there is is'nt a solid plan other than to make a simple language :)
 
 # Compilation Targets
 
-# In Development
+## In Development
 - Intel x86_64 Linux - Being implemented by ScriptLine
 - Intel x86_64 Windows - Being implmented by MousieDev
 
-# Planned
+## Planned
 - WASM
 
 # Getting Started
