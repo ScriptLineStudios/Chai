@@ -6,11 +6,16 @@
 #include "lexer.h"
 #include "parser.h"
 
+#include "run.c"
+
 int main(int argc, char *argv[]) {
 	printf("STARTING FILE LEXING...\n");
 	Token *tokens = malloc(sizeof(Token) * 100);
-	int ntok = lex_file(tokens, fopen(argv[1], "r"));
+	int ntok = lex_file(tokens, fopen(argv[1], "r"), argv[1]);
 	printf("ENDING FILE LEXING...\n");
 
 	generate_ast(tokens, ntok);
+	free(tokens);
+
+	return 0;
 }

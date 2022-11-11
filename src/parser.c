@@ -7,6 +7,7 @@
 
 #include "lexer.h"
 #include "codegen.h"
+#include "error.h"
 
 int token_index = 0;
 int if_statement_stack = -1;
@@ -101,6 +102,10 @@ void decrement_symbol(Token *tokens) {
 
 Token *token_peek(Token *tokens) {
     return (tokens+token_index); 
+}
+
+Token *prev_token(Token *tokens) {
+    return (tokens+token_index-2);
 }
 
 NodeReturn return_node(void *node, NodeType node_type) {
@@ -276,7 +281,6 @@ NodeReturn factor(Token *tokens) {
 
     else if (current_token->type == TOK_STRING) {
         String *string = malloc(sizeof(String));
-
         string->value = current_token->value;
         advance_symbol(tokens);
 
@@ -358,8 +362,7 @@ NodeReturn expression(Token *tokens) {
     if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_IDENT) {
-            printf("Expected identifier\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected Identifier");
         }
 
         char *var_name = current_token->value;
@@ -368,7 +371,7 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
 
         if (current_token->type != TOK_EQUALS) {
-            printf("Expected =\n");
+            raise_error(prev_token(tokens), "Expected =");
             exit(1);
         }
         advance_symbol(tokens);
@@ -392,6 +395,10 @@ NodeReturn expression(Token *tokens) {
             var_types[variables] = "binop";
         }
 
+        if (current_token->type != TOK_SEMI) {
+            raise_error(prev_token(tokens), "Expected ;");
+        }
+
         NodeReturn variable = create_var_assign_node(var_name, var_expression);
         variables++;
         return variable;
@@ -399,8 +406,7 @@ NodeReturn expression(Token *tokens) {
     else if (strcmp(current_token->value, "while") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
-            printf("Expected (\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected (");
         }
         advance_symbol(tokens);
 
@@ -409,14 +415,12 @@ NodeReturn expression(Token *tokens) {
         NodeReturn while_expression = expression(tokens);
         NodeReturn while_statement = create_while_node(while_expression, PEEK());
         if (current_token->type != TOK_CLOSE_PARENTHESES) {
-            printf("Expected )\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected )");
         }
 
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_CURLY_BRACE) {
-            printf("Expected {\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected {");
         }
         parsingWhile = true;
         PUSHWHILE(1);
@@ -425,8 +429,7 @@ NodeReturn expression(Token *tokens) {
     else if (strcmp(current_token->value, "if") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
-            printf("Expected (\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected (");
         }
 
         advance_symbol(tokens);
@@ -436,14 +439,12 @@ NodeReturn expression(Token *tokens) {
         NodeReturn if_expression = expression(tokens);
         NodeReturn if_statement = create_if_node(if_expression, PEEK()); //if statement stack can be thought of as a pointer to the top of the stack
         if (current_token->type != TOK_CLOSE_PARENTHESES) {
-            printf("Expected )\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected )");
         }
 
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_CURLY_BRACE) {
-            printf("Expected {\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected {");
         }
         parsingIf = true;
         PUSHIF(1);
@@ -484,8 +485,7 @@ NodeReturn expression(Token *tokens) {
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
-            printf("Expected (\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected (");
         }
 
         advance_symbol(tokens);
@@ -494,15 +494,13 @@ NodeReturn expression(Token *tokens) {
         NodeReturn res = create_stdout_node(expr);
 
         if (current_token->type != TOK_CLOSE_PARENTHESES) {
-            printf("Expected )\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected )");
         }
 
         advance_symbol(tokens);
 
         if (current_token->type != TOK_SEMI) {
-            printf("Expected ;\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected ;");
         }
 
         return res;
@@ -524,8 +522,7 @@ NodeReturn expression(Token *tokens) {
         advance_symbol(tokens);
         //printf("YAY: %s\n", current_token->value);
         if (current_token->type != TOK_EQUALS) {
-            printf("Expected =");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected =");
         }
 
         advance_symbol(tokens);
@@ -543,8 +540,7 @@ NodeReturn expression(Token *tokens) {
         NodeReturn variable = create_var_reassign_node(name, var_expression, getvariable(name));
         
         if (current_token->type != TOK_SEMI) {
-            printf("Expected ;\n");
-            exit(1);
+            raise_error(prev_token(tokens), "Expected ;");
         }
         return variable;
     }

@@ -1,4 +1,7 @@
 let lst = [1, 2];
-stdout(lst[0]);
-lst[0] = 10;
-stdout(lst[0]);
+let x = 0;
+while (x != 10) {
+    lst[x] = 2;
+    stdout(lst[x]);
+    x = x+1;
+}

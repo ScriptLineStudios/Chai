@@ -51,16 +51,18 @@ char *parse_integer(char *line, int start, int *end, char *res) {
 	return res;
 }
 
-int lex_file(Token *tokens, FILE *file_ptr) {
+int lex_file(Token *tokens, FILE *file_ptr, const char *filepath) {
     char line[MAX_LINE_LEN] = {0};
 	memset(tokens, 0, sizeof(Token) * 100);
 	int x = 0;
+	int lines = 1;
 
     while (fgets(line, MAX_LINE_LEN, file_ptr)) {
 		int skip = 1;
 		line[strcspn(line, "\n")] = 0;
 		for (int col = 0; col < strlen(line); col+=skip, skip=1) {
 			tokens[x].position = x;
+			tokens[x].line_num = lines;
 			switch (line[col]) {
 			case ' ':
 			case '\t':
@@ -173,8 +175,9 @@ int lex_file(Token *tokens, FILE *file_ptr) {
 			}
 			break;
 			}
+			tokens[x].filepath = filepath;
 		}
-
+		lines++;
     }
 
     fclose(file_ptr);

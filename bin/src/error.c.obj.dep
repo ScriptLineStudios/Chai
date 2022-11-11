@@ -1,4 +1,4 @@
-bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
+bin/src/error.c.obj: src/error.c /usr/include/stdc-predef.h \
  /usr/include/stdio.h /usr/include/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
  /usr/include/bits/wordsize.h /usr/include/bits/timesize.h \
@@ -13,11 +13,9 @@ bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/floatn.h \
  /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h \
- /usr/include/string.h /usr/include/stdlib.h \
- /usr/include/bits/stdlib-bsearch.h /usr/include/bits/stdlib-float.h \
- /usr/include/ctype.h /usr/include/bits/endian.h \
- /usr/include/bits/endianness.h include/lexer.h include/parser.h \
- src/run.c
+ /usr/include/stdlib.h /usr/include/bits/stdlib-bsearch.h \
+ /usr/include/bits/stdlib-float.h src/../include/error.h \
+ src/../include/../include/parser.h src/../include/../include/lexer.h
 /usr/include/stdc-predef.h:
 /usr/include/stdio.h:
 /usr/include/bits/libc-header-start.h:
@@ -44,13 +42,9 @@ bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
 /usr/include/bits/floatn.h:
 /usr/include/bits/floatn-common.h:
 /usr/include/bits/stdio.h:
-/usr/include/string.h:
 /usr/include/stdlib.h:
 /usr/include/bits/stdlib-bsearch.h:
 /usr/include/bits/stdlib-float.h:
-/usr/include/ctype.h:
-/usr/include/bits/endian.h:
-/usr/include/bits/endianness.h:
-include/lexer.h:
-include/parser.h:
-src/run.c:
+src/../include/error.h:
+src/../include/../include/parser.h:
+src/../include/../include/lexer.h:

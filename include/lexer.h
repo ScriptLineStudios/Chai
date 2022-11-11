@@ -27,6 +27,8 @@ typedef struct {
 	TokenType type;
 	char *value;
 	int position;
+	int line_num;
+	const char *filepath;
 } Token;
 
-int lex_file(Token *tokens, FILE *file_ptr);
+int lex_file(Token *tokens, FILE *file_ptr, const char *filepath);
