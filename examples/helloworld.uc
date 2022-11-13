@@ -1,1 +1,3 @@
-stdout("Hello World");
+while (1!=2) {
+	stdout("math holds!");
+}
