@@ -592,6 +592,9 @@ void visit_binop(NodeReturn node) {
     else if (op.type == TOK_MULT) {
         codegen_mult(node);
     }    
+    else if (op.type == TOK_MINUS) {
+        codegen_sub(node);
+    }
     else if (op.type == TOK_NOT_EQUAL) {
         if (left_type == NUMBER || right_type == NUMBER) {
             codegen_not_equal(node);
@@ -657,7 +660,7 @@ void visit_stdout_node(NodeReturn node) {
     NodeReturn expr = stdout->expression;
     printf("STDOUT: ");
     NodeType type = visit_node_and_get_type(expr);
-    codegen_stdout(expr, type);
+    codegen_stdout(expr, type, var_types);
 }
 
 void visit_while_node(NodeReturn node) {

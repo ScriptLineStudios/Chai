@@ -8,6 +8,7 @@ typedef enum {
 	TOK_LET,
 	TOK_NUMBER,
 	TOK_PLUS,
+	TOK_SUB,
 	TOK_MINUS,
 	TOK_MULT,
 	TOK_DIV,

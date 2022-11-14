@@ -41,6 +41,15 @@ void codegen_add(NodeReturn node) {
     tok_markers++;
 }
 
+void codegen_sub(NodeReturn node) {
+    Number *number = (Number *)node.node;
+    fprintf(file_ptr, "    pop rax\n");
+    fprintf(file_ptr, "    pop rbx\n");
+    fprintf(file_ptr, "    sub rbx, rax\n");
+    fprintf(file_ptr, "    push rbx\n");
+    tok_markers++;
+}
+
 void codegen_mult(NodeReturn node) {
     fprintf(file_ptr, "    pop rax\n");
     fprintf(file_ptr, "    pop rdx\n");
@@ -149,15 +158,22 @@ void codegen_end_node(NodeReturn node) {
     }
 }
 
-void codegen_stdout(NodeReturn node, NodeType type) {
+void codegen_stdout(NodeReturn node, NodeType type, char **var_types) {
     fprintf(file_ptr, ";; --- Stdout Start\n");
 
     fprintf(file_ptr, "    pop rax\n");
     if (type == NUMBER) {
+        printf("here");
         fprintf(file_ptr, "    mov rdi, format\n");
     }
     else if (type == USEVAR) {
-        fprintf(file_ptr, "    mov rdi, format\n");
+        UseVar *use_var = (UseVar *)node.node;
+        if (var_types[getvariableindex(use_var->name)] == "string") {
+            fprintf(file_ptr, "    mov rdi, string_format\n");
+        }
+        else {
+            fprintf(file_ptr, "    mov rdi, format\n");
+        }
     }
     else if (type == LISTACCESS) {
         fprintf(file_ptr, "    mov rdi, format\n");
@@ -226,7 +242,9 @@ void codegen_end() {
     
     for (int i = 0; i < number_alloced_strings; i++) {
         fprintf(file_ptr, "\nstring_%d:\n", i);
-        fprintf(file_ptr, "    db `%s`, %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));
+        //fprintf(file_ptr, "    db `%s`, %d, 0\n", strings[i], strlen(strings[number_alloced_strings - 1]));
+        fprintf(file_ptr, "    db `%s`, %d, 0\n", strings[i], 9);
+    
     }
     fprintf(file_ptr, "\nsection .data\n");
     fprintf(file_ptr, "    x db 0\n");

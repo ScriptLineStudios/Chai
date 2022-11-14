@@ -110,6 +110,11 @@ int lex_file(Token *tokens, FILE *file_ptr, const char *filepath) {
 				tokens[x].value = "+";
 				x++;
 				break;
+			case '-':
+				tokens[x].type = TOK_MINUS;
+				tokens[x].value = "-";
+				x++;
+				break;
             case '*':
             	tokens[x].type = TOK_MULT;
 				tokens[x].value = "*";

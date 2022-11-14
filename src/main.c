@@ -16,7 +16,7 @@ void run(void) {
 	system("nasm -f elf64 code.asm");
 	system("gcc -no-pie code.o");
 	system("./a.out");
-	system("rm code.o && rm code.asm");
+	//system("rm code.o && rm code.asm && rm a.out");
 }
 
 int main(int argc, char *argv[]) {

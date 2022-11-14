@@ -1,3 +1,2 @@
-while (1!=2) {
-	stdout("math holds!");
-}
+let x = "Hello, World!";
+stdout(x);
