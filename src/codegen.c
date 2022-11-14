@@ -230,4 +230,5 @@ void codegen_end() {
     }
     fprintf(file_ptr, "\nsection .data\n");
     fprintf(file_ptr, "    x db 0\n");
+    fclose(file_ptr);
 }
