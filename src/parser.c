@@ -635,12 +635,14 @@ NodeReturn expression(Token *tokens) {
             int dropped = POPIF();
 
             NodeReturn res = create_end_node(stack_pos, IF);
+            if (is_parsing_function) advance_symbol(tokens);
             return res;
         }
         else if (while_stack_pointer > 0) {
             printf("IN AN WHILE STATEMENT\n");
             int dropped = POPWHILE();
             NodeReturn res = create_end_node(stack_pos, WHILE);
+            if (is_parsing_function) advance_symbol(tokens);
             return res;
         }
     }

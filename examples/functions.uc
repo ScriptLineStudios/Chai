@@ -1,8 +1,7 @@
-func create_vars(x, y) {
-    let a = x;
-    let b = y;
+func hello_world_func() {
+    if (1 != 2) {
+        stdout("Hello World!");
+    }
 }
 
-create_vars(1, 2);
-stdout(a);
-stdout(b);
+hello_world_func();
