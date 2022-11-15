@@ -119,7 +119,7 @@ NodeReturn return_node(void *node, NodeType node_type) {
 
 int var_index = 0;
 
-NodeReturn create_function_call_node(char *func_name, NodeReturn func_args, int num_args){
+NodeReturn create_function_call_node(char *func_name, NodeReturn *func_args, int num_args){
     FunctionCall *function_call = malloc(sizeof(FunctionCall));
 
     function_call->function_name = func_name;
@@ -583,16 +583,17 @@ NodeReturn expression(Token *tokens) {
         }
 
         advance_symbol(tokens);
-        NodeReturn arg; //TODO (URGENT) this needs to be an array of some sort!
-        int num_func_args = 0;
+        NodeReturn *args = malloc(sizeof(NodeReturn) * 100); //TODO (URGENT) this needs to be an array of some sort!
+        int num_func_args = 0; //something tells me this is gonna important...
+
         while (current_token->type != TOK_CLOSE_PARENTHESES) {
-            arg = expression(tokens);
+            args[num_func_args++] = expression(tokens);
             if (current_token->type == TOK_COMMA) {
                 advance_symbol(tokens);
             }
         }
 
-        NodeReturn function_call = create_function_call_node(func_name, arg, num_func_args);
+        NodeReturn function_call = create_function_call_node(func_name, args, num_func_args);
 
         advance_symbol(tokens);
         if (current_token->type != TOK_SEMI) {
@@ -868,10 +869,16 @@ void visit_function_node(NodeReturn node, bool is_in_func) {
     printf("END");
 }
 
+
 void visit_function_call_node(NodeReturn node, bool is_in_func) {
     FunctionCall *function_call = (FunctionCall*)node.node;
     printf("FUNCTION CALL (%s) ", function_call->function_name, function_call->num_args);
-    visit_node(function_call->args, is_in_func);
+    codegen_set_parsing_args(true);
+    for (int i = 0; i < function_call->num_args; i++) {
+        codegen_set_arg_num(i);
+        visit_node(function_call->args[i], is_in_func); //TODO: URGENT: visit_node_for_arg needs to be deprecated asap!! (ayy it got depreciated)
+    }
+    codegen_set_parsing_args(false); //very important!!
     codegen_function_call(node, is_in_func);
 }
 

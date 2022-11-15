@@ -56,15 +56,42 @@ int tok_markers = 0;
 
 #define WRITE print_choice[(int)!is_in_func]
 
-void codegen_number(NodeReturn node, bool is_in_func) {
-    WRITE(file_ptr, ";; --- Number\n");
-    Number *number = (Number *)node.node;
-    WRITE(file_ptr, "    push %d\n", number->value);
-    tok_markers++;
+static bool parsing_args = false;
+static int arg_num; 
+
+void codegen_set_parsing_args(bool value) {
+    parsing_args = value;
 }
+
+void codegen_set_arg_num(int value) {
+    arg_num = value;
+}
+
+// thanks to http://6.s081.scripts.mit.edu/sp18/x86-64-architecture-guide.html for providing this order.
+char *argument_registers[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"}; //for now we do not support stack based arguments :(
+
+void codegen_number_arg(NodeReturn node, bool is_in_func, int arg_num) {
+    WRITE(file_ptr, ";; --- Number Arg\n");
+    Number *number = (Number*)node.node;
+    WRITE(file_ptr, "    mov %s, %d\n", argument_registers[arg_num], number->value);
+}
+
+void codegen_number(NodeReturn node, bool is_in_func) {
+    if (parsing_args) {
+        codegen_number_arg(node, is_in_func, arg_num);
+    }
+    else {
+        WRITE(file_ptr, ";; --- Number\n");
+        Number *number = (Number *)node.node;
+        WRITE(file_ptr, "    push %d\n", number->value);
+        tok_markers++;
+    }
+}
+
 
 void codegen_add(NodeReturn node, bool is_in_func) {
     Number *number = (Number *)node.node;
+    WRITE(file_ptr, "; ---- ADD \n");
     WRITE(file_ptr, "    pop rax\n");
     WRITE(file_ptr, "    pop rbx\n");
     WRITE(file_ptr, "    add rax, rbx\n");
@@ -93,11 +120,12 @@ int num_list_offset = -1;
 void codegen_var_use(NodeReturn node, bool is_in_func) {
     WRITE(file_ptr, "; ---- Use Var\n");
     UseVar *use_var = (UseVar *)node.node;
-    if (!is_in_func) {
-        WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
+    if (is_in_func && isfunctionarg(use_var->name)) {
+        //TODO these must be registers.
+        WRITE(file_ptr, "    mov rax, %s\n", argument_registers[getfunctionarg(use_var->name)]);
     }
     else {
-        WRITE(file_ptr, "    mov rax, [rsp+8]\n", (use_var->index+num_list_offset) * 8);
+        WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
     }
     WRITE(file_ptr, "    push rax\n");
     tok_markers++;
@@ -122,7 +150,6 @@ void codegen_var(NodeReturn node, bool is_in_func) {
     }
 
 }
-
 
 #define CMP_BUFFER 65525
 char *cmp_buffer;
@@ -181,7 +208,6 @@ void codegen_if(NodeReturn node, bool is_in_func) {
     IfNode *if_node = (IfNode *)node.node;
     WRITE(file_ptr, "branch_%d:\n", if_node->stack_pos);
 }
-
 
 void codegen_end_node(NodeReturn node, bool is_in_func) {
     End *end_node = (End *)node.node;

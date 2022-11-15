@@ -1,8 +1,8 @@
-func create_vars(s) {
-    let z = s;
-    let c = s + 1;
+func create_vars(x, y) {
+    let a = x;
+    let b = y;
 }
 
-create_vars(10);
-stdout(z);
-stdout(c);
+create_vars(1, 2);
+stdout(a);
+stdout(b);

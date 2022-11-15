@@ -23,6 +23,9 @@ void codegen_list_reassign(NodeReturn node, bool is_in_func);
 void codegen_function(NodeReturn node, bool is_in_func);
 void codegen_function_call(NodeReturn node, bool is_in_func);
 
+void codegen_set_parsing_args(bool value);
+void codegen_set_arg_num(int value);
+
 void codegen_var(NodeReturn node, bool is_in_func);
 void codegen_var_use(NodeReturn node, bool is_in_func);
 

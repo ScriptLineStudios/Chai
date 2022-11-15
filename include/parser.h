@@ -43,7 +43,7 @@ typedef struct {
 typedef struct {
     char *function_name;
     int num_args;
-    NodeReturn args;
+    NodeReturn *args;
 } FunctionCall;
 
 typedef struct {
@@ -104,9 +104,11 @@ typedef struct {
     int value;
 } Number;
 
-void generate_ast(Token *tokens, int ntokens);
-void visit_node(NodeReturn node, bool is_in_func);
 int getvariableindex(char *input);
 int getfunctionarg(char *input);
+int isfunctionarg(char *input);
+
+void generate_ast(Token *tokens, int ntokens);
+void visit_node(NodeReturn node, bool is_in_func);
 NodeType visit_node_and_get_type(NodeReturn node, bool is_in_func);
 
