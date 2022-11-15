@@ -17,7 +17,7 @@ bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
  /usr/include/bits/stdlib-bsearch.h /usr/include/bits/stdlib-float.h \
  /usr/include/ctype.h /usr/include/bits/endian.h \
  /usr/include/bits/endianness.h include/lexer.h include/parser.h \
- src/run.c
+ /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h src/run.c
 /usr/include/stdc-predef.h:
 /usr/include/stdio.h:
 /usr/include/bits/libc-header-start.h:
@@ -53,4 +53,5 @@ bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
 /usr/include/bits/endianness.h:
 include/lexer.h:
 include/parser.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h:
 src/run.c:

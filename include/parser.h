@@ -1,5 +1,6 @@
 #pragma once
 #include "lexer.h"
+#include <stdbool.h>
 
 typedef enum {
     NULL_TYPE = 0,
@@ -15,6 +16,8 @@ typedef enum {
     LIST = 10,
     LISTACCESS = 11,
     LISTREASSIGN = 12,
+    FUNCTION = 13,
+    FUNCTIONCALL = 14,
 } NodeType;
 
 //be hold the list of nodes
@@ -29,6 +32,18 @@ typedef struct {
     char **values;
     int size;
 } List;
+
+typedef struct {
+    char **args;
+    int arg_size;
+    NodeReturn expression;
+} Function;
+
+typedef struct {
+    char *function_name;
+    int num_args;
+    NodeReturn args;
+} FunctionCall;
 
 typedef struct {
     NodeReturn left;
@@ -89,7 +104,8 @@ typedef struct {
 } Number;
 
 void generate_ast(Token *tokens, int ntokens);
-void visit_node(NodeReturn node);
+void visit_node(NodeReturn node, bool is_in_func);
 int getvariableindex(char *input);
-NodeType visit_node_and_get_type(NodeReturn node);
+int getfunctionarg(char *input);
+NodeType visit_node_and_get_type(NodeReturn node, bool is_in_func);
 

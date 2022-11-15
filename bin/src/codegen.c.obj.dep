@@ -15,8 +15,9 @@ bin/src/codegen.c.obj: src/codegen.c /usr/include/stdc-predef.h \
  /usr/include/bits/types/__fpos64_t.h /usr/include/bits/types/__FILE.h \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/stdio.h \
- /usr/include/string.h /usr/include/assert.h include/parser.h \
- include/lexer.h
+ /usr/include/string.h /usr/include/assert.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h \
+ include/parser.h include/lexer.h
 /usr/include/stdc-predef.h:
 /usr/include/stdlib.h:
 /usr/include/bits/libc-header-start.h:
@@ -48,5 +49,6 @@ bin/src/codegen.c.obj: src/codegen.c /usr/include/stdc-predef.h \
 /usr/include/bits/stdio.h:
 /usr/include/string.h:
 /usr/include/assert.h:
+/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h:
 include/parser.h:
 include/lexer.h:

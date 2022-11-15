@@ -1,7 +1,11 @@
+//forget parser.c this file has gotten real messy. TODO: clean this mess up.
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
+#include <stdbool.h>
 
 #include "parser.h"
 #include "lexer.h"
@@ -13,75 +17,107 @@ FILE *get_file_ptr() {
     return file_ptr;
 }
 
+char *function_lines[6400000];
+int function_line_index = 0;
+
+int queue_function_line_gen(FILE *temp, const char *line, ...) {
+    char *str = malloc(sizeof(char*) * 100);
+
+    va_list ptr;
+    va_start(ptr, line);
+    
+    //thanks https://stackoverflow.com/questions/43129133/c-variable-argument-with-sprintf for stopping me from using sprintf :)
+    vsnprintf(str, 100, line, ptr); 
+
+    function_lines[function_line_index++] = str;
+    va_end(ptr);
+    return 0;
+}
+
+int (*queue_ptr)(FILE *, const char *, ...);
+int (*print_ptr)(FILE *, const char *, ...);
+int (*print_choice[2])(FILE *, const char *, ...);
 void codegen_setup(NodeReturn node) {
+    queue_ptr = &queue_function_line_gen;
+    print_ptr = &fprintf;
+
+    print_choice[0] = queue_ptr;
+    print_choice[1] = print_ptr;
+
     file_ptr = fopen("code.asm", "w");
 
     fprintf(file_ptr, "global main\n");
     fprintf(file_ptr, "extern printf\n");
     fprintf(file_ptr, "section .text\n");
     fprintf(file_ptr, "main:\n");
-    fprintf(file_ptr, "    sub rsp, 32\n");
 }
 
 int tok_markers = 0;
 
-void codegen_number(NodeReturn node) {
-    fprintf(file_ptr, ";; --- Number\n");
+#define WRITE print_choice[(int)!is_in_func]
+
+void codegen_number(NodeReturn node, bool is_in_func) {
+    WRITE(file_ptr, ";; --- Number\n");
     Number *number = (Number *)node.node;
-    fprintf(file_ptr, "    push %d\n", number->value);
+    WRITE(file_ptr, "    push %d\n", number->value);
     tok_markers++;
 }
 
-void codegen_add(NodeReturn node) {
+void codegen_add(NodeReturn node, bool is_in_func) {
     Number *number = (Number *)node.node;
-    fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    pop rbx\n");
-    fprintf(file_ptr, "    add rax, rbx\n");
-    fprintf(file_ptr, "    push rax\n");
+    WRITE(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    pop rbx\n");
+    WRITE(file_ptr, "    add rax, rbx\n");
+    WRITE(file_ptr, "    push rax\n");
     tok_markers++;
 }
 
-void codegen_sub(NodeReturn node) {
+void codegen_sub(NodeReturn node, bool is_in_func) {
     Number *number = (Number *)node.node;
-    fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    pop rbx\n");
-    fprintf(file_ptr, "    sub rbx, rax\n");
-    fprintf(file_ptr, "    push rbx\n");
+    WRITE(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    pop rbx\n");
+    WRITE(file_ptr, "    sub rbx, rax\n");
+    WRITE(file_ptr, "    push rbx\n");
     tok_markers++;
 }
 
-void codegen_mult(NodeReturn node) {
-    fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    pop rdx\n");
-    fprintf(file_ptr, "    mul rdx\n");
-    fprintf(file_ptr, "    push rax\n");
+void codegen_mult(NodeReturn node, bool is_in_func) {
+    WRITE(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    pop rdx\n");
+    WRITE(file_ptr, "    mul rdx\n");
+    WRITE(file_ptr, "    push rax\n");
     tok_markers++;
 }
 
 int num_list_offset = -1;
-void codegen_var_use(NodeReturn node) {
+void codegen_var_use(NodeReturn node, bool is_in_func) {
     UseVar *use_var = (UseVar *)node.node;
-    fprintf(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
-    fprintf(file_ptr, "    push rax\n");
+    if (!is_in_func) {
+        WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
+    }
+    else {
+        WRITE(file_ptr, "    mov rax, [rsp+8]\n", (use_var->index+num_list_offset) * 8);
+    }
+    WRITE(file_ptr, "    push rax\n");
     tok_markers++;
 }
 
-void codegen_var(NodeReturn node) {
-    fprintf(file_ptr, ";; --- Var\n");
+void codegen_var(NodeReturn node, bool is_in_func) {
+    WRITE(file_ptr, ";; --- Var\n");
 
     VarAssign *var = (VarAssign *)node.node;
     NodeReturn expr = var->expression;
     if (expr.node_type == LIST) {
         List *list = (List *)expr.node;
         for (int i = 0; i < list->size; i++) {
-            fprintf(file_ptr, "    pop rax\n");
-            fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index+i) * 8); //push the value onto the stack
+            WRITE(file_ptr, "    pop rax\n");
+            WRITE(file_ptr, "    mov [x+%d], rax\n", (var->index+i) * 8); //push the value onto the stack
             num_list_offset++;
         }
     }
     else {
-        fprintf(file_ptr, "    pop rax\n");
-        fprintf(file_ptr, "    mov [x+%d], rax\n", (var->index+num_list_offset) * 8); //push the value onto the stack
+        WRITE(file_ptr, "    pop rax\n");
+        WRITE(file_ptr, "    mov [x+%d], rax\n", (var->index+num_list_offset) * 8); //push the value onto the stack
     }
 
 }
@@ -92,100 +128,101 @@ char *cmp_buffer;
 
 int cleanups = 0;
 
-void codegen_string_not_equal(NodeReturn node) {
+void codegen_string_not_equal(NodeReturn node, bool is_in_func) {
     BinOp *bin_op = (BinOp *)node.node;
     
     NodeReturn left = bin_op->left;
     NodeReturn right = bin_op->right;
 
-    fprintf(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
-    visit_node(left);
-    visit_node(right);
+    WRITE(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
+    visit_node(left, is_in_func);
+    visit_node(right, is_in_func);
 
-    fprintf(file_ptr, "    pop rax\n"); //Get the addresses of the 2 strings
-    fprintf(file_ptr, "    pop rbx\n"); //Get the addresses of the 2 strings
+    WRITE(file_ptr, "    pop rax\n"); //Get the addresses of the 2 strings
+    WRITE(file_ptr, "    pop rbx\n"); //Get the addresses of the 2 strings
 
-    fprintf(file_ptr, "    mov rsi, rax\n");
-    fprintf(file_ptr, "    mov rdi, rbx\n");
-    fprintf(file_ptr, "    mov ecx, 6\n");
+    WRITE(file_ptr, "    mov rsi, rax\n");
+    WRITE(file_ptr, "    mov rdi, rbx\n");
+    WRITE(file_ptr, "    mov ecx, 6\n");
 
-    
-    fprintf(file_ptr, "    repe cmpsb\n");
-    fprintf(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
-    fprintf(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
+    WRITE(file_ptr, "    repe cmpsb\n");
+    WRITE(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
+    WRITE(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
     cleanups+=2;
 }
 
 #define MAX_TEMP_BUFFER_SIZE 128
 
-void codegen_not_equal(NodeReturn node) {
+void codegen_not_equal(NodeReturn node, bool is_in_func) {
     BinOp *bin_op = (BinOp *)node.node;
 
     NodeReturn left = bin_op->left;
     NodeReturn right = bin_op->right;
 
-    fprintf(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
-    visit_node(left);
-    visit_node(right);
+    WRITE(file_ptr, "comp_%d:\n", bin_op->stack_pos); //Get the addresses of the 2 strings
+    visit_node(left, is_in_func);
+    visit_node(right, is_in_func);
 
-    fprintf(file_ptr, "    pop rax\n");
-    fprintf(file_ptr, "    pop rbx\n");
-    fprintf(file_ptr, "    cmp rax, rbx\n");    
-    fprintf(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
-    fprintf(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
+    WRITE(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    pop rbx\n");
+    WRITE(file_ptr, "    cmp rax, rbx\n");    
+    WRITE(file_ptr, "    jne branch_%d\n", bin_op->stack_pos);
+    WRITE(file_ptr, "    je end_branch_%d\n", bin_op->stack_pos);
     cleanups += 2;
 }
 
-void codegen_while_node(NodeReturn node) {
+void codegen_while_node(NodeReturn node, bool is_in_func) {
     WhileNode *while_node = (WhileNode *)node.node;
-    fprintf(file_ptr, "branch_%d:\n", while_node->stack_pos);
+    WRITE(file_ptr, "branch_%d:\n", while_node->stack_pos);
 }
 
-void codegen_if(NodeReturn node) {
+void codegen_if(NodeReturn node, bool is_in_func) {
     IfNode *if_node = (IfNode *)node.node;
-    fprintf(file_ptr, "branch_%d:\n", if_node->stack_pos);
+    WRITE(file_ptr, "branch_%d:\n", if_node->stack_pos);
 }
 
 
-void codegen_end_node(NodeReturn node) {
+void codegen_end_node(NodeReturn node, bool is_in_func) {
     End *end_node = (End *)node.node;
     if (end_node->ending == IF) {
-        fprintf(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
+        WRITE(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
     }
     else if (end_node->ending == WHILE) {
-        fprintf(file_ptr, "    jmp comp_%d\n", end_node->stack_pos);
-        fprintf(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
+        WRITE(file_ptr, "    jmp comp_%d\n", end_node->stack_pos);
+        WRITE(file_ptr, "end_branch_%d:\n", end_node->stack_pos);
     }
 }
 
-void codegen_stdout(NodeReturn node, NodeType type, char **var_types) {
-    fprintf(file_ptr, ";; --- Stdout Start\n");
+void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in_func) {
+    WRITE(file_ptr, ";; --- Stdout Start\n");
 
-    fprintf(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    pop rax\n");
     if (type == NUMBER) {
         printf("here");
-        fprintf(file_ptr, "    mov rdi, format\n");
+        WRITE(file_ptr, "    mov rdi, format\n");
     }
     else if (type == USEVAR) {
         UseVar *use_var = (UseVar *)node.node;
-        if (var_types[getvariableindex(use_var->name)] == "string") {
-            fprintf(file_ptr, "    mov rdi, string_format\n");
+        printf("\nUSING VAR!\n");
+        if (var_types[getvariableindex(use_var->name)] == "string") { //TODO: REIMPLMENT THIS: || func_args_types[getfunctionarg(use_var->name)] == "string") {
+            WRITE(file_ptr, "    mov rdi, string_format\n");
         }
         else {
-            fprintf(file_ptr, "    mov rdi, format\n");
+            WRITE(file_ptr, "    mov rdi, format\n");
         }
+        printf("out\n");
     }
     else if (type == LISTACCESS) {
-        fprintf(file_ptr, "    mov rdi, format\n");
+        WRITE(file_ptr, "    mov rdi, format\n");
     }
     else {
-        fprintf(file_ptr, "    mov rdi, string_format\n");
+        WRITE(file_ptr, "    mov rdi, string_format\n");
     }
         
-    fprintf(file_ptr, "    mov rsi, rax\n");
-    fprintf(file_ptr, "    mov al,0\n");
-    fprintf(file_ptr, "    xor rax, rax\n");
-    fprintf(file_ptr, "    call printf\n");
+    WRITE(file_ptr, "    mov rsi, rax\n");
+    WRITE(file_ptr, "    mov al,0\n");
+    WRITE(file_ptr, "    xor rax, rax\n");
+    WRITE(file_ptr, "    call printf\n");
 }
 
 char *strings[6400000] = {0}; 
@@ -196,34 +233,52 @@ void queue_string_data_gen(char *value) {
     number_alloced_strings++;
 }
 
-void codegen_string(NodeReturn node) {
+void codegen_string(NodeReturn node, bool is_in_func) {
 	String *string = (String *)node.node;
     queue_string_data_gen(string->value);
-    fprintf(file_ptr, "    push string_%d\n", number_alloced_strings - 1);
+    WRITE(file_ptr, "    push string_%d\n", number_alloced_strings - 1);
 }
 
-void codegen_list(NodeReturn node) {
+void codegen_list(NodeReturn node, bool is_in_func) {
     List *list = (List *)node.node;
 
     for (int i = list->size - 1; i >= 0; i--) {
-        fprintf(file_ptr, "    push %d\n", atoi(list->values[i]));
+        WRITE(file_ptr, "    push %d\n", atoi(list->values[i]));
     }
 }
 
-void codegen_list_access(NodeReturn node) {
-    fprintf(file_ptr, ";; --- List Access\n");
+void codegen_list_access(NodeReturn node, bool is_in_func) {
+    WRITE(file_ptr, ";; --- List Access\n");
     ListAccess *list_access = (ListAccess *)node.node;
-    fprintf(file_ptr, "    pop rbx\n");
-    fprintf(file_ptr, "    mov rax, [x+%d+rbx*8]\n", (list_access->index) * 8);
-    fprintf(file_ptr, "    push rax\n");
+    WRITE(file_ptr, "    pop rbx\n");
+    WRITE(file_ptr, "    mov rax, [x+%d+rbx*8]\n", (list_access->index) * 8);
+    WRITE(file_ptr, "    push rax\n");
 }
 
-void codegen_list_reassign(NodeReturn node) {
+void codegen_list_reassign(NodeReturn node, bool is_in_func) {
     ListReassign *list_reassign = (ListReassign *)node.node;
-    fprintf(file_ptr, ";; --- List Reassign\n");
-    fprintf(file_ptr, "    pop rax\n"); // this is the value
-    fprintf(file_ptr, "    pop rbx\n"); // this is the index
-    fprintf(file_ptr, "    mov [x+%d+rbx*8], rax\n", (list_reassign->index) * 8);
+    WRITE(file_ptr, ";; --- List Reassign\n");
+    WRITE(file_ptr, "    pop rax\n"); // this is the value
+    WRITE(file_ptr, "    pop rbx\n"); // this is the index
+    WRITE(file_ptr, "    mov [x+%d+rbx*8], rax\n", (list_reassign->index) * 8);
+}
+
+char *functions[100];
+int allocated_functions = 0;
+
+void queue_function_name_gen() {
+    //TODO: this should accept a name
+    functions[allocated_functions++] = "func:\n";
+}
+
+void codegen_function(NodeReturn node, bool is_in_func) {
+    Function *function = (Function *)node.node;
+    queue_function_name_gen(); //TODO: this should pass name
+}
+
+void codegen_function_call(NodeReturn node, bool is_in_func) {
+    FunctionCall *function_call = (FunctionCall*)node.node;
+    WRITE(file_ptr, "    call func\n");
 }
 
 void codegen_end() {
@@ -233,8 +288,17 @@ void codegen_end() {
     fprintf(file_ptr, "    mov rax, 60\n");
     fprintf(file_ptr, "    syscall\n");
 
-    fprintf(file_ptr, "    add rsp, 32\n");
     fprintf(file_ptr, "    ret\n");
+
+    for (int i = 0; i < allocated_functions; i++) {
+        fprintf(file_ptr, functions[i]);
+    }
+
+    for (int i = 0; i < function_line_index; i++) {
+        fprintf(file_ptr, function_lines[i]);
+        //free(function_lines[i]);
+    }
+
     fprintf(file_ptr, "format:\n");
     fprintf(file_ptr, "    db %s, 10, 0\n", "\"%d\"");
     fprintf(file_ptr, "string_format:\n");

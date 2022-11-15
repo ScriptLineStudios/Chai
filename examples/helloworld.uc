@@ -1,2 +1,3 @@
-let x = "Hello, World!";
+let x = "Hi!";
 stdout(x);
+stdout("hello");
