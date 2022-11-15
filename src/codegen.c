@@ -91,6 +91,7 @@ void codegen_mult(NodeReturn node, bool is_in_func) {
 
 int num_list_offset = -1;
 void codegen_var_use(NodeReturn node, bool is_in_func) {
+    WRITE(file_ptr, "; ---- Use Var\n");
     UseVar *use_var = (UseVar *)node.node;
     if (!is_in_func) {
         WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
@@ -203,14 +204,12 @@ void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in
     }
     else if (type == USEVAR) {
         UseVar *use_var = (UseVar *)node.node;
-        printf("\nUSING VAR!\n");
         if (var_types[getvariableindex(use_var->name)] == "string") { //TODO: REIMPLMENT THIS: || func_args_types[getfunctionarg(use_var->name)] == "string") {
             WRITE(file_ptr, "    mov rdi, string_format\n");
         }
         else {
             WRITE(file_ptr, "    mov rdi, format\n");
         }
-        printf("out\n");
     }
     else if (type == LISTACCESS) {
         WRITE(file_ptr, "    mov rdi, format\n");

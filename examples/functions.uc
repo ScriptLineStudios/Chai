@@ -1,7 +1,8 @@
-func create(s) {
+func create_vars(s) {
     let z = s;
-    return;
+    let c = s + 1;
 }
 
-create(10);
+create_vars(10);
 stdout(z);
+stdout(c);

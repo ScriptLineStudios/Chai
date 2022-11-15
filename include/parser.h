@@ -36,7 +36,8 @@ typedef struct {
 typedef struct {
     char **args;
     int arg_size;
-    NodeReturn expression;
+    NodeReturn *expressions;
+    int num_expressions;
 } Function;
 
 typedef struct {

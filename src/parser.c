@@ -129,10 +129,11 @@ NodeReturn create_function_call_node(char *func_name, NodeReturn func_args, int 
     return return_node((void *)function_call, FUNCTIONCALL);
 }
 
-NodeReturn create_function_node(NodeReturn expression) {
+NodeReturn create_function_node(NodeReturn *expressions, int num_expressions) {
     Function *function = (Function *)malloc(sizeof(Function));
 
-    function->expression = expression;
+    function->expressions = expressions;
+    function->num_expressions = num_expressions;
     return return_node((void *)function, FUNCTION);
 }
 
@@ -534,7 +535,8 @@ NodeReturn expression(Token *tokens) {
         }
 
         is_parsing_function = true;
-        NodeReturn function_experession;
+        NodeReturn *function_experessions = malloc(sizeof(NodeReturn) * 100);
+        int number_experessions = 0;
         
         while (current_token->type != TOK_CLOSE_CURLY_BRACE) {  
             advance_symbol(tokens);
@@ -542,11 +544,11 @@ NodeReturn expression(Token *tokens) {
             if (current_token->type == TOK_CLOSE_CURLY_BRACE && if_stack_pointer <= 0 && while_stack_pointer <= 0) {
                 break;
             }  //Making sure we are closing of the right bracket
-            function_experession = expression(tokens);
+            function_experessions[number_experessions++] = expression(tokens);
         }
 
         printf("got an expression! current_token: %s\n", current_token->value);
-        NodeReturn function = create_function_node(function_experession);
+        NodeReturn function = create_function_node(function_experessions, number_experessions);
         return function;    
     }
 
@@ -855,12 +857,15 @@ void visit_list_reassign_node(NodeReturn node, bool is_in_func) {
 
 void visit_function_node(NodeReturn node, bool is_in_func) {
     Function *function = (Function*)node.node;
-    NodeReturn expression = function->expression;
+    NodeReturn *expressions = function->expressions;
     printf("FUNCTION: \n");
-    printf("    ");
     codegen_function(node, is_in_func);
-    visit_node(expression, true);
-    printf("\nEND");
+    for (int i = 0; i < function->num_expressions; i++) {   
+        printf("    ");
+        visit_node(expressions[i], true);
+        printf("\n");
+    }
+    printf("END");
 }
 
 void visit_function_call_node(NodeReturn node, bool is_in_func) {
