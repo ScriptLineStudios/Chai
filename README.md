@@ -1,6 +1,7 @@
 # Chai
 
 Compiler for the Chai programming language.
+Chai is a fast, compiled dynamically typed language. Currently without any notable features :(
 
 # Compilation Targets
 
@@ -57,4 +58,15 @@ while (i != 5) {
     stdout(lst[i]);
     i = i + 1;
 }
+```
+
+## Functions
+```
+func foo(bar) {
+    if (bar != 200) {
+        stdout("The value of bar is not 200!");
+    }
+}
+
+foo(201);
 ```
