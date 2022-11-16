@@ -1,6 +1,7 @@
 # Chai
 
 Compiler for the Chai programming language.
+Chai is a fast, compiled dynamically typed language. Currently without any notable features :(
 
 # Compilation Targets
 
