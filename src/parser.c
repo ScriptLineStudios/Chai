@@ -108,6 +108,10 @@ Token *prev_token(Token *tokens) {
     return (tokens+token_index-2);
 }
 
+Token *prev_prev_token(Token *tokens) {
+    return (tokens+token_index-3);
+}
+
 NodeReturn return_node(void *node, NodeType node_type) {
     NodeReturn ret;
     ret.node = node;
@@ -118,6 +122,10 @@ NodeReturn return_node(void *node, NodeType node_type) {
 }
 
 int var_index = 0;
+
+NodeReturn create_null_node() {
+    return return_node((void *)NULL, NULL_TYPE);
+}
 
 NodeReturn create_function_call_node(char *func_name, NodeReturn *func_args, int num_args){
     FunctionCall *function_call = malloc(sizeof(FunctionCall));
@@ -465,7 +473,10 @@ char **get_function_args(Token *tokens) {
     return args;
 }
 
+static bool parsing_function = false;
+
 NodeReturn expression(Token *tokens) {
+    printf("CURRENTLY LOOKING AT: %s\n", current_token->value);
     if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_IDENT) {
@@ -538,17 +549,28 @@ NodeReturn expression(Token *tokens) {
         NodeReturn *function_experessions = malloc(sizeof(NodeReturn) * 100);
         int number_experessions = 0;
         
-        while (current_token->type != TOK_CLOSE_CURLY_BRACE) {  
+        // while (current_token->type != TOK_CLOSE_CURLY_BRACE) {
+        //     advance_symbol(tokens);
+        //     printf("tok = %s\n", current_token->value);
+        //     function_experessions[number_experessions++] = expression(tokens);
+        // }
+        parsing_function = true;
+        advance_symbol(tokens);
+        printf("starting function parse. current token = %s\n", current_token->value);
+        while (parsing_function) {
+            NodeReturn expr = expression(tokens);
+            if (expr.node_type != NULL_TYPE) {
+                function_experessions[number_experessions++] = expr;
+            }
+            else {
+                decrement_symbol(tokens);
+            }
             advance_symbol(tokens);
-            printf("going into search with: %s\n", current_token->value);
-            if (current_token->type == TOK_CLOSE_CURLY_BRACE && if_stack_pointer <= 0 && while_stack_pointer <= 0) {
-                break;
-            }  //Making sure we are closing of the right bracket
-            function_experessions[number_experessions++] = expression(tokens);
+            printf("here cs = %s\n", current_token->value);
         }
 
-        printf("got an expression! current_token: %s\n", current_token->value);
         NodeReturn function = create_function_node(function_experessions, number_experessions);
+        printf("finished getting expressions current symbol = %s\n", current_token->value);
         return function;    
     }
 
@@ -576,6 +598,7 @@ NodeReturn expression(Token *tokens) {
         return while_statement;
     }
     else if (isfunction(current_token->value)) {
+        printf("found function call!!\n");
         char *func_name = current_token->value;
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -628,22 +651,30 @@ NodeReturn expression(Token *tokens) {
     }   
 
     else if (strcmp(current_token->value, "}") == 0) {
-        int stack_pos = POP();
-
+        int stack_pos;
         if (if_stack_pointer > 0) {
             printf("IN AN IF STATEMENT\n");
+            stack_pos = POP();
+            
             int dropped = POPIF();
 
             NodeReturn res = create_end_node(stack_pos, IF);
-            if (is_parsing_function) advance_symbol(tokens);
+            //if (is_parsing_function) advance_symbol(tokens);
             return res;
         }
         else if (while_stack_pointer > 0) {
             printf("IN AN WHILE STATEMENT\n");
+            stack_pos = POP();
+            
             int dropped = POPWHILE();
             NodeReturn res = create_end_node(stack_pos, WHILE);
-            if (is_parsing_function) advance_symbol(tokens);
+            //if (is_parsing_function) advance_symbol(tokens);
             return res;
+        }
+
+        if (while_stack_pointer <= 0 && if_stack_pointer <= 0) {
+            parsing_function = false;
+            return create_null_node();
         }
     }
     else if (strcmp(current_token->value, "stdout") == 0) {

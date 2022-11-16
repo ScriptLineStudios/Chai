@@ -243,11 +243,12 @@ void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in
     else {
         WRITE(file_ptr, "    mov rdi, string_format\n");
     }
-        
+    WRITE(file_ptr, "    push rsi\n");
     WRITE(file_ptr, "    mov rsi, rax\n");
     WRITE(file_ptr, "    mov al,0\n");
     WRITE(file_ptr, "    xor rax, rax\n");
     WRITE(file_ptr, "    call printf\n");
+    WRITE(file_ptr, "    pop rsi\n");
 }
 
 char *strings[6400000] = {0}; 

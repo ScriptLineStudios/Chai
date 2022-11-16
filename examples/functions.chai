@@ -1,0 +1,12 @@
+func hello_world_func(foo, bar) {
+	if (foo != 100) {
+		stdout("Foo is not 100!");
+		stdout("Foo is not 100!");
+	}
+	if (bar != 100) {
+		stdout("Bar is not 100!");
+		stdout("Bar is not 100!");
+	}
+}
+
+hello_world_func(99, 100);
