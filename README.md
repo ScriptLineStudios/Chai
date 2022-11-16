@@ -1,6 +1,6 @@
-# Untitled-Compiler
+# Chai
 
-An untitled compiler written in C. So far there is is'nt a solid plan other than to make a simple language :)
+Compiler for the Chai programming language.
 
 # Compilation Targets
 
