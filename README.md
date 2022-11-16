@@ -59,3 +59,14 @@ while (i != 5) {
     i = i + 1;
 }
 ```
+
+## Functions
+```
+func foo(bar) {
+    if (bar != 200) {
+        stdout("The value of bar is not 200!");
+    }
+}
+
+foo(201);
+```
