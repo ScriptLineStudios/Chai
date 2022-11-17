@@ -220,10 +220,25 @@ void codegen_end_node(NodeReturn node, bool is_in_func) {
     }
 }
 
+#define CODEGEN_SAVE_REGISTER_ARGS  for (int i = 0; i < sizeof(argument_registers) / sizeof(argument_registers[0]); i++) {   \
+    WRITE(file_ptr, "push %s\n", argument_registers[i]);                                                                     \
+} \
+
+#define CODEGEN_RESTIRE_REGISTER_ARGS    for (int i = sizeof(argument_registers) / sizeof(argument_registers[0]); i > 0; i++) {  \
+        WRITE(file_ptr, "pop %s\n", argument_registers[i]);                                                                      \
+    }                                                                                                                             
+
 void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in_func) {
     WRITE(file_ptr, ";; --- Stdout Start\n");
 
+
     WRITE(file_ptr, "    pop rax\n");
+    WRITE(file_ptr, "    push rsi\n");
+    WRITE(file_ptr, "    push rdi\n");
+    WRITE(file_ptr, "    push rdx\n");
+    WRITE(file_ptr, "    push r8\n");
+
+    
     if (type == NUMBER) {
         printf("here");
         WRITE(file_ptr, "    mov rdi, format\n");
@@ -243,11 +258,15 @@ void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in
     else {
         WRITE(file_ptr, "    mov rdi, string_format\n");
     }
-    WRITE(file_ptr, "    push rsi\n");
+
     WRITE(file_ptr, "    mov rsi, rax\n");
     WRITE(file_ptr, "    mov al,0\n");
     WRITE(file_ptr, "    xor rax, rax\n");
     WRITE(file_ptr, "    call printf\n");
+    
+    WRITE(file_ptr, "    pop r8\n");
+    WRITE(file_ptr, "    pop rdx\n");
+    WRITE(file_ptr, "    pop rdi\n");
     WRITE(file_ptr, "    pop rsi\n");
 }
 

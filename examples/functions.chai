@@ -1,12 +1,13 @@
-func hello_world_func(foo, bar) {
-	if (foo != 100) {
-		stdout("Foo is not 100!");
-		stdout("Foo is not 100!");
+func hello_world_func(z, y, a) {
+	if (z != 100) {
+		stdout("Hello World!");
 	}
-	if (bar != 100) {
-		stdout("Bar is not 100!");
-		stdout("Bar is not 100!");
+	if (y != 200) {
+		stdout("Y is != 200");
+	}
+	if (a != 300) {
+		stdout("A is != 300");
 	}
 }
 
-hello_world_func(99, 100);
+hello_world_func(10, 200, 300);
