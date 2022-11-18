@@ -116,6 +116,16 @@ void codegen_mult(NodeReturn node, bool is_in_func) {
     tok_markers++;
 }
 
+// void codegen_number_arg(NodeReturn node, bool is_in_func, int arg_num) {
+//     WRITE(file_ptr, ";; --- Number Arg\n");
+//     Number *number = (Number*)node.node;
+//     WRITE(file_ptr, "    mov %s, %d\n", argument_registers[arg_num], number->value);
+// }
+
+void codegen_use_var_arg(NodeReturn node, bool is_in_func, int arg_num, int index) {
+    WRITE(file_ptr, "    mov rax");
+}
+
 int num_list_offset = -1;
 void codegen_var_use(NodeReturn node, bool is_in_func) {
     WRITE(file_ptr, "; ---- Use Var\n");
@@ -127,7 +137,12 @@ void codegen_var_use(NodeReturn node, bool is_in_func) {
     // else {
     //} Thank goodness this is gone
     WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
-    WRITE(file_ptr, "    push rax\n");
+    if (parsing_args) {
+        WRITE(file_ptr, "    mov %s, [x+%d]\n", argument_registers[arg_num], (use_var->index+num_list_offset) * 8);
+    }
+    else {
+        WRITE(file_ptr, "    push rax\n");
+    }
     tok_markers++;
 }
 

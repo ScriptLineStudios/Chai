@@ -9,7 +9,9 @@
 #include "run.c"
 
 void usage(void) {
-	printf("USAGE: ./bin/comp.exe <filename>\n");
+	printf("USAGE: ./bin/comp.exe <filename> [EXTRA ARGS]\n");
+	printf("[EXTRA ARGS]:\n");
+	printf("    --link-file=your_c_file.c -> Link with C code.\n");
 }
 
 char* concat(const char *s1, const char *s2)
