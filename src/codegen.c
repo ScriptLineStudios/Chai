@@ -326,12 +326,17 @@ void queue_function_name_gen() {
 
 void codegen_function(NodeReturn node, bool is_in_func) {
     Function *function = (Function *)node.node;
-    queue_function_name_gen(); //TODO: this should pass name
+    queue_function_name_gen(function); //TODO: this should pass name
 }
 
 void codegen_function_call(NodeReturn node, bool is_in_func) {
     FunctionCall *function_call = (FunctionCall*)node.node;
-    WRITE(file_ptr, "    call func\n");
+    WRITE(file_ptr, "    call %s\n", function_call->function_name);
+}
+
+void codegen_extern_node(NodeReturn node, bool is_in_func) {
+    ExternNode *extern_node = (ExternNode*)node.node;
+    WRITE(file_ptr, "    extern %s\n", extern_node->name);
 }
 
 void codegen_end() {

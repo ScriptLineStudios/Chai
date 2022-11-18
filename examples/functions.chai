@@ -1,6 +1,13 @@
 func hello_world_func(a, b) {
-	let z = a + b;
-	stdout(z);
+	if (a != b) {
+		stdout("a != b");
+	}
+	if (a != 20) {
+		stdout("a != 20");
+	}
+	if (b != 20) {
+		stdout("b != 20");
+	}
 }
 
-hello_world_func(10, 20000);
+hello_world_func(20, 21);

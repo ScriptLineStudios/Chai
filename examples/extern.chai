@@ -1,0 +1,3 @@
+extern c_function;
+
+c_function(328);

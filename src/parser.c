@@ -127,6 +127,12 @@ NodeReturn create_null_node() {
     return return_node((void *)NULL, NULL_TYPE);
 }
 
+NodeReturn create_extern_node(char *name) {
+    ExternNode *extern_node = malloc(sizeof(ExternNode));
+    extern_node->name = name;
+    return return_node((void *)extern_node, EXTERNNODE);
+}
+
 NodeReturn create_function_call_node(char *func_name, NodeReturn *func_args, int num_args){
     FunctionCall *function_call = malloc(sizeof(FunctionCall));
 
@@ -493,7 +499,6 @@ ArgInfo get_function_args(Token *tokens) {
 static bool parsing_function = false;
 
 NodeReturn expression(Token *tokens) {
-    printf("CURRENTLY LOOKING AT: %s\n", current_token->value);
     if (strcmp(current_token->value, "let") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_IDENT) {
@@ -537,6 +542,26 @@ NodeReturn expression(Token *tokens) {
         NodeReturn variable = create_var_assign_node(var_name, var_expression);
         variables++;
         return variable;
+    }
+    
+    else if (strcmp(current_token->value, "extern") == 0) {
+        advance_symbol(tokens);
+
+        if (current_token->type != TOK_IDENT) {
+            raise_error(prev_token(tokens), "Expected identifier");
+        }
+
+        char *func_name = current_token->value;
+        function_names[num_functions] = func_name;
+        num_functions++;
+        
+        advance_symbol(tokens);
+
+        if (current_token->type != TOK_SEMI) {
+            raise_error(prev_token(tokens), "Expected ;");
+        }
+
+        return create_extern_node(func_name);
     }
 
     else if (strcmp(current_token->value, "func") == 0) {
@@ -923,7 +948,6 @@ void visit_function_node(NodeReturn node, bool is_in_func) {
     printf("END");
 }
 
-
 void visit_function_call_node(NodeReturn node, bool is_in_func) {
     FunctionCall *function_call = (FunctionCall*)node.node;
     printf("FUNCTION CALL (%s) ", function_call->function_name, function_call->num_args);
@@ -934,6 +958,13 @@ void visit_function_call_node(NodeReturn node, bool is_in_func) {
     }
     codegen_set_parsing_args(false); //very important!!
     codegen_function_call(node, is_in_func);
+}
+
+void visit_extern_node(NodeReturn node, bool is_in_func) {
+    ExternNode *extern_node = (ExternNode *)node.node;
+
+    printf("EXTERN FUNCTION: (%s)", extern_node->name);
+    codegen_extern_node(node, is_in_func);
 }
 
 NodeType visit_node_and_get_type(NodeReturn node, bool is_in_func) {
@@ -1040,6 +1071,9 @@ void visit_node(NodeReturn node, bool is_in_func) {
     }
     else if (node.node_type == FUNCTIONCALL) {
         visit_function_call_node(node, is_in_func);
+    }
+    else if (node.node_type == EXTERNNODE) {
+        visit_extern_node(node, is_in_func);
     }
     else {
         printf("Unknown type: %d\n", node.node_type);
