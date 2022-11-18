@@ -120,15 +120,34 @@ int num_list_offset = -1;
 void codegen_var_use(NodeReturn node, bool is_in_func) {
     WRITE(file_ptr, "; ---- Use Var\n");
     UseVar *use_var = (UseVar *)node.node;
-    if (is_in_func && isfunctionarg(use_var->name)) {
-        //TODO these must be registers.
-        WRITE(file_ptr, "    mov rax, %s\n", argument_registers[getfunctionarg(use_var->name)]);
-    }
-    else {
-        WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
-    }
+    // if (is_in_func && isfunctionarg(use_var->name)) {
+    //     //TODO these must be registers.
+    //     WRITE(file_ptr, "    mov rax, %s\n", argument_registers[getfunctionarg(use_var->name)]);
+    // }
+    // else {
+    //} Thank goodness this is gone
+    WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
     WRITE(file_ptr, "    push rax\n");
     tok_markers++;
+}
+
+void codegen_var_argument(NodeReturn node, bool is_in_func, int index) {
+    //TODO: This function needs fixing 2022/11/18
+    WRITE(file_ptr, ";; --- Var\n");
+
+    VarAssign *var = (VarAssign *)node.node;
+    NodeReturn expr = var->expression;
+    if (expr.node_type == LIST) {
+        List *list = (List *)expr.node;
+        for (int i = 0; i < list->size; i++) {
+            WRITE(file_ptr, "    pop rax\n");
+            WRITE(file_ptr, "    mov [x+%d], rax\n", (var->index+i) * 8); //push the value onto the stack
+            num_list_offset++;
+        }
+    }
+    else {
+        WRITE(file_ptr, "    mov [x+%d], %s\n", (var->index+num_list_offset) * 8, argument_registers[index]); //push the value onto the stack
+    }
 }
 
 void codegen_var(NodeReturn node, bool is_in_func) {
@@ -148,7 +167,6 @@ void codegen_var(NodeReturn node, bool is_in_func) {
         WRITE(file_ptr, "    pop rax\n");
         WRITE(file_ptr, "    mov [x+%d], rax\n", (var->index+num_list_offset) * 8); //push the value onto the stack
     }
-
 }
 
 #define CMP_BUFFER 65525
@@ -233,12 +251,7 @@ void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in
 
 
     WRITE(file_ptr, "    pop rax\n");
-    WRITE(file_ptr, "    push rsi\n");
-    WRITE(file_ptr, "    push rdi\n");
-    WRITE(file_ptr, "    push rdx\n");
-    WRITE(file_ptr, "    push r8\n");
 
-    
     if (type == NUMBER) {
         printf("here");
         WRITE(file_ptr, "    mov rdi, format\n");
@@ -263,11 +276,6 @@ void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in
     WRITE(file_ptr, "    mov al,0\n");
     WRITE(file_ptr, "    xor rax, rax\n");
     WRITE(file_ptr, "    call printf\n");
-    
-    WRITE(file_ptr, "    pop r8\n");
-    WRITE(file_ptr, "    pop rdx\n");
-    WRITE(file_ptr, "    pop rdi\n");
-    WRITE(file_ptr, "    pop rsi\n");
 }
 
 char *strings[6400000] = {0}; 

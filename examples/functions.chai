@@ -1,13 +1,6 @@
-func hello_world_func(z, y, a) {
-	if (z != 100) {
-		stdout("Hello World!");
-	}
-	if (y != 200) {
-		stdout("Y is != 200");
-	}
-	if (a != 300) {
-		stdout("A is != 300");
-	}
+func hello_world_func(a, b) {
+	let z = a + b;
+	stdout(z);
 }
 
-hello_world_func(10, 200, 300);
+hello_world_func(10, 20000);

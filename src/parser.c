@@ -137,11 +137,13 @@ NodeReturn create_function_call_node(char *func_name, NodeReturn *func_args, int
     return return_node((void *)function_call, FUNCTIONCALL);
 }
 
-NodeReturn create_function_node(NodeReturn *expressions, int num_expressions) {
+NodeReturn create_function_node(NodeReturn *expressions, int num_expressions, NodeReturn *assignments, int arg_size) {
     Function *function = (Function *)malloc(sizeof(Function));
 
     function->expressions = expressions;
     function->num_expressions = num_expressions;
+    function->arguments = assignments;
+    function->arg_size = arg_size;
     return return_node((void *)function, FUNCTION);
 }
 
@@ -299,7 +301,7 @@ NodeReturn factor(Token *tokens) {
     else if (is_parsing_function && isfunctionarg(current_token->value)) {
         UseVar *use_var = (UseVar*)malloc(sizeof(UseVar));
         use_var->name = current_token->value;
-        use_var->index = getfunctionarg(current_token->value);
+        use_var->index = getvariableindex(current_token->value);
         advance_symbol(tokens);
         if (strcmp(current_token->value, "[") == 0) {
             advance_symbol(tokens);
@@ -452,10 +454,17 @@ NodeReturn create_new_list(Token *tokens) {
     return return_node((void *)list, LIST);
 }
 
-char **get_function_args(Token *tokens) {
+typedef struct {
+    char **args;
+    NodeReturn *function_assignments;
+    int arg_size;
+} ArgInfo;
+
+ArgInfo get_function_args(Token *tokens) {
     printf("beginning search for function arguments current token = %s\n", current_token->value);
 
     char **args = malloc(sizeof(char **) * 100);
+    NodeReturn *function_arg_assigments = malloc(sizeof(NodeReturn) * 100);
     int arg_size = 0;
     advance_symbol(tokens);
     while (strcmp(current_token->value, ")") != 0) {
@@ -464,13 +473,21 @@ char **get_function_args(Token *tokens) {
             function_arguments[num_func_args] = current_token->value;
             args[arg_size] = current_token->value;
             func_arg_types[num_func_args] = current_token->value; //TODO: THESE NEED REAL TYPES!!!!
+            function_arg_assigments[arg_size] = create_var_assign_node(current_token->value, create_null_node());
+            //var_index++;
+            var_names[variables++] = current_token->value;
+
             arg_size++;
             num_func_args++;
         }
         advance_symbol(tokens);
     }
+    ArgInfo info;
+    info.args = args;
+    info.function_assignments = function_arg_assigments;
+    info.arg_size = arg_size;
     printf("---- ending search sucessfully found %d arguments ----\n", arg_size);
-    return args;
+    return info;
 }
 
 static bool parsing_function = false;
@@ -538,7 +555,8 @@ NodeReturn expression(Token *tokens) {
             raise_error(prev_token(tokens), "Expected (");
         }
 
-        char **function_args = get_function_args(tokens);
+        ArgInfo info = get_function_args(tokens);
+        char **function_args = info.args;
         advance_symbol(tokens);
 
         if (current_token->type != TOK_OPEN_CURLY_BRACE) {
@@ -569,7 +587,7 @@ NodeReturn expression(Token *tokens) {
             printf("here cs = %s\n", current_token->value);
         }
 
-        NodeReturn function = create_function_node(function_experessions, number_experessions);
+        NodeReturn function = create_function_node(function_experessions, number_experessions, info.function_assignments, info.arg_size);
         printf("finished getting expressions current symbol = %s\n", current_token->value);
         return function;    
     }
@@ -894,6 +912,9 @@ void visit_function_node(NodeReturn node, bool is_in_func) {
     NodeReturn *expressions = function->expressions;
     printf("FUNCTION: \n");
     codegen_function(node, is_in_func);
+    for (int j = 0; j < function->arg_size; j++) {
+        codegen_var_argument(function->arguments[j], true, j);
+    }
     for (int i = 0; i < function->num_expressions; i++) {   
         printf("    ");
         visit_node(expressions[i], true);

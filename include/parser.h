@@ -38,6 +38,7 @@ typedef struct {
     int arg_size;
     NodeReturn *expressions;
     int num_expressions;
+    NodeReturn *arguments;
 } Function;
 
 typedef struct {
