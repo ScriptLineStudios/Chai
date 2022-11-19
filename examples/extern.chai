@@ -1,4 +1,8 @@
 extern c_function;
 
-let x = "hello world this is a string written in chai which is then passed";
-c_function(x);
+func function() {
+    let str = "this is some text written in Chai!";
+    c_function(str);
+}
+
+function();

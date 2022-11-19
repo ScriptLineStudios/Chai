@@ -18,7 +18,8 @@ typedef enum {
     LISTREASSIGN = 12,
     FUNCTION = 13,
     FUNCTIONCALL = 14,
-    EXTERNNODE = 15
+    EXTERNNODE = 15,
+    RETURN = 16
 } NodeType;
 
 //be hold the list of nodes
@@ -32,6 +33,10 @@ typedef struct {
 typedef struct {
     char *name;
 } ExternNode;
+
+typedef struct {
+    NodeReturn return_expr;
+} ReturnNode;
 
 typedef struct {    
     char **values;

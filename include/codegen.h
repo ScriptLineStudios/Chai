@@ -23,6 +23,7 @@ void codegen_list_reassign(NodeReturn node, bool is_in_func);
 void codegen_function(NodeReturn node, bool is_in_func);
 void codegen_function_call(NodeReturn node, bool is_in_func);
 void codegen_extern_node(NodeReturn node, bool is_in_func);
+void codegen_return(NodeReturn node, bool is_in_func);
 
 void codegen_var_argument(NodeReturn node, bool is_in_func, int index);
 

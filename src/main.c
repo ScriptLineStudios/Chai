@@ -39,21 +39,15 @@ char *get_name_from_file_path(char *filename) {
 void link_file(char *file_path) {
 	char command[1000];
 	sprintf(command, "gcc -shared -o %s.so %s.c", get_name_from_file_path(file_path), strtok(file_path, "."));
-	printf(command);
-	printf("\n");
 	system(command);
 	sprintf(command, "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s.so", get_name_from_file_path(file_path));
-	printf(command);
-	printf("\n");
 	system(command);
 	system("export LD_LIBRARY_PATH");
 	sprintf(command, " -Xlinker %s.so ", get_name_from_file_path(file_path));
 	link_arg = concat(link_arg, command);
-	printf("new link arg = %s\n", link_arg);
 }
 
 void process_addition_arg(char *addition_arg) {
-	printf("addtion arg = %s\n", addition_arg);
 	if (strncmp(addition_arg, "--", 2) == 0) {
 		int scanner = 2;
 		char *new_str = malloc(sizeof(char) * 100);
@@ -71,9 +65,6 @@ void process_addition_arg(char *addition_arg) {
 		}
 
 		new_str[scanner - 3] = '\0';
-
-		printf("opcode = %s\n", new_str);
-		printf("operand = %s\n", operand);
 	
 		if (strcmp(new_str, "link-file") == 0) {
 			link_file(operand);

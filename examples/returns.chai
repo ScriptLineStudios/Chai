@@ -1,0 +1,6 @@
+func function(number) {
+    return number-number-number;
+}
+
+let a = function(1);
+stdout(a);

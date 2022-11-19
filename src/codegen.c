@@ -79,6 +79,7 @@ void codegen_number_arg(NodeReturn node, bool is_in_func, int arg_num) {
 void codegen_number(NodeReturn node, bool is_in_func) {
     if (parsing_args) {
         codegen_number_arg(node, is_in_func, arg_num);
+        arg_num++;
     }
     else {
         WRITE(file_ptr, ";; --- Number\n");
@@ -101,10 +102,20 @@ void codegen_add(NodeReturn node, bool is_in_func) {
 
 void codegen_sub(NodeReturn node, bool is_in_func) {
     Number *number = (Number *)node.node;
-    WRITE(file_ptr, "    pop rax\n");
-    WRITE(file_ptr, "    pop rbx\n");
-    WRITE(file_ptr, "    sub rbx, rax\n");
-    WRITE(file_ptr, "    push rbx\n");
+    WRITE(file_ptr, "; ---- SUB \n");
+    if (parsing_args) {
+        WRITE(file_ptr, "    mov rax, %s\n", argument_registers[arg_num-1]);
+        WRITE(file_ptr, "    mov rbx, %s\n", argument_registers[arg_num-2]);
+        WRITE(file_ptr, "    sub rbx, rax\n");
+        WRITE(file_ptr, "    mov %s, rbx\n", argument_registers[arg_num-2]);
+        arg_num -= 2;
+    }
+    else {
+        WRITE(file_ptr, "    pop rax\n");
+        WRITE(file_ptr, "    pop rbx\n");
+        WRITE(file_ptr, "    sub rbx, rax\n");
+        WRITE(file_ptr, "    push rbx\n");
+    }
     tok_markers++;
 }
 
@@ -139,6 +150,7 @@ void codegen_var_use(NodeReturn node, bool is_in_func) {
     WRITE(file_ptr, "    mov rax, [x+%d]\n", (use_var->index+num_list_offset) * 8);
     if (parsing_args) {
         WRITE(file_ptr, "    mov %s, [x+%d]\n", argument_registers[arg_num], (use_var->index+num_list_offset) * 8);
+        arg_num++;
     }
     else {
         WRITE(file_ptr, "    push rax\n");
@@ -336,7 +348,7 @@ int allocated_functions = 0;
 
 void queue_function_name_gen() {
     //TODO: this should accept a name
-    functions[allocated_functions++] = "func:\n";
+    functions[allocated_functions++] = "function:\n";
 }
 
 void codegen_function(NodeReturn node, bool is_in_func) {
@@ -354,10 +366,22 @@ void codegen_extern_node(NodeReturn node, bool is_in_func) {
     WRITE(file_ptr, "    extern %s\n", extern_node->name);
 }
 
-void codegen_end() {
-    for (int i = 0; i < cleanups; i++) {
-        fprintf(file_ptr, "    pop rax\n");
+void codegen_return(NodeReturn node, bool is_in_func) {
+    ReturnNode *return_node = (ReturnNode *)node.node;
+
+    if (return_node->return_expr.node_type != NULL_TYPE) {
+        WRITE(file_ptr, "    pop rax\n");
     }
+    WRITE(file_ptr, "    mov [rsp+8], rax\n");
+
+    for (int i = 0; i < cleanups; i++) {
+        WRITE(file_ptr, "    pop rbx\n");
+    }
+
+    WRITE(file_ptr, "    ret\n");
+}
+
+void codegen_end() {
     fprintf(file_ptr, "    mov rax, 60\n");
     fprintf(file_ptr, "    syscall\n");
 
@@ -371,7 +395,7 @@ void codegen_end() {
         fprintf(file_ptr, function_lines[i]);
         //free(function_lines[i]);
     }
-
+    
     fprintf(file_ptr, "format:\n");
     fprintf(file_ptr, "    db %s, 10, 0\n", "\"%d\"");
     fprintf(file_ptr, "string_format:\n");

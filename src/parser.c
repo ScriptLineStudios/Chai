@@ -127,6 +127,13 @@ NodeReturn create_null_node() {
     return return_node((void *)NULL, NULL_TYPE);
 }
 
+NodeReturn create_return_node(NodeReturn expression) {
+    ReturnNode *node = malloc(sizeof(ReturnNode));
+    node->return_expr = expression;
+
+    return return_node((void *)node, RETURN);
+}
+
 NodeReturn create_extern_node(char *name) {
     ExternNode *extern_node = malloc(sizeof(ExternNode));
     extern_node->name = name;
@@ -440,9 +447,7 @@ NodeReturn update_old_list(Token *tokens, List *list) {
     }
 }
 
-NodeReturn create_new_list(Token *tokens) {
-    printf("----- Beginning Search For New List Elements! -----\n");
-    
+NodeReturn create_new_list(Token *tokens) {    
     List *list = (List*)malloc(sizeof(List));
     list->size = 0;
     list->values = malloc(sizeof(char **) * 100);
@@ -467,7 +472,6 @@ typedef struct {
 } ArgInfo;
 
 ArgInfo get_function_args(Token *tokens) {
-    printf("beginning search for function arguments current token = %s\n", current_token->value);
 
     char **args = malloc(sizeof(char **) * 100);
     NodeReturn *function_arg_assigments = malloc(sizeof(NodeReturn) * 100);
@@ -492,7 +496,6 @@ ArgInfo get_function_args(Token *tokens) {
     info.args = args;
     info.function_assignments = function_arg_assigments;
     info.arg_size = arg_size;
-    printf("---- ending search sucessfully found %d arguments ----\n", arg_size);
     return info;
 }
 
@@ -569,7 +572,6 @@ NodeReturn expression(Token *tokens) {
         if (current_token->type != TOK_IDENT) {
             raise_error(prev_token(tokens), "Expected identifier");
         }
-        printf("FUNCTION NAME = %s\n", current_token->value);
 
         char *function_name = current_token->value;
         function_names[num_functions] = function_name;
@@ -599,7 +601,6 @@ NodeReturn expression(Token *tokens) {
         // }
         parsing_function = true;
         advance_symbol(tokens);
-        printf("starting function parse. current token = %s\n", current_token->value);
         while (parsing_function) {
             NodeReturn expr = expression(tokens);
             if (expr.node_type != NULL_TYPE) {
@@ -609,11 +610,9 @@ NodeReturn expression(Token *tokens) {
                 decrement_symbol(tokens);
             }
             advance_symbol(tokens);
-            printf("here cs = %s\n", current_token->value);
         }
 
         NodeReturn function = create_function_node(function_experessions, number_experessions, info.function_assignments, info.arg_size);
-        printf("finished getting expressions current symbol = %s\n", current_token->value);
         return function;    
     }
 
@@ -641,7 +640,6 @@ NodeReturn expression(Token *tokens) {
         return while_statement;
     }
     else if (isfunction(current_token->value)) {
-        printf("found function call!!\n");
         char *func_name = current_token->value;
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -662,8 +660,10 @@ NodeReturn expression(Token *tokens) {
         NodeReturn function_call = create_function_call_node(func_name, args, num_func_args);
 
         advance_symbol(tokens);
-        if (current_token->type != TOK_SEMI) {
-            raise_error(prev_token(tokens), "Expected ;");
+        if (current_token->type != TOK_PLUS) {
+            if (current_token->type != TOK_SEMI) {
+                raise_error(prev_token(tokens), "Expected ;");
+            }
         }
         
         return function_call;
@@ -696,7 +696,6 @@ NodeReturn expression(Token *tokens) {
     else if (strcmp(current_token->value, "}") == 0) {
         int stack_pos;
         if (if_stack_pointer > 0) {
-            printf("IN AN IF STATEMENT\n");
             stack_pos = POP();
             
             int dropped = POPIF();
@@ -706,7 +705,6 @@ NodeReturn expression(Token *tokens) {
             return res;
         }
         else if (while_stack_pointer > 0) {
-            printf("IN AN WHILE STATEMENT\n");
             stack_pos = POP();
             
             int dropped = POPWHILE();
@@ -720,6 +718,21 @@ NodeReturn expression(Token *tokens) {
             return create_null_node();
         }
     }
+
+    else if (strcmp(current_token->value, "return") == 0) {
+        advance_symbol(tokens);
+
+        NodeReturn return_expr;
+        if (current_token->type != TOK_SEMI) {
+            return_expr = expression(tokens);
+        }
+        else {
+            return_expr = create_null_node();   
+        }
+
+        return create_return_node(return_expr);
+    }
+
     else if (strcmp(current_token->value, "stdout") == 0) {
         advance_symbol(tokens);
         if (current_token->type != TOK_OPEN_PARENTHESES) {
@@ -967,8 +980,27 @@ void visit_extern_node(NodeReturn node, bool is_in_func) {
     codegen_extern_node(node, is_in_func);
 }
 
+void visit_return_node(NodeReturn node, bool is_in_func) {
+    if (!is_in_func) {
+        raise_error(current_token, "Cannot return outside a function");
+    }
+    ReturnNode *return_node = (ReturnNode *)node.node;
+
+    printf("    RETURN: ");
+    visit_node(return_node->return_expr, is_in_func);
+    codegen_return(node, is_in_func);
+}
+
+void visit_null_node(NodeReturn node, bool is_in_func) {
+    printf("NULL");
+}
+
 NodeType visit_node_and_get_type(NodeReturn node, bool is_in_func) {
-    if (node.node_type == BINOP) {
+    if (node.node_type == NULL_TYPE) {
+        visit_null_node(node, is_in_func);
+        return node.node_type;
+    } 
+    else if (node.node_type == BINOP) {
         visit_binop(node, is_in_func);
         return node.node_type;
     }
@@ -1030,7 +1062,10 @@ NodeType visit_node_and_get_type(NodeReturn node, bool is_in_func) {
 }
 
 void visit_node(NodeReturn node, bool is_in_func) {
-    if (node.node_type == BINOP) {
+    if (node.node_type == NULL_TYPE) {
+        visit_null_node(node, is_in_func);
+    }
+    else if (node.node_type == BINOP) {
         visit_binop(node, is_in_func);
     }
     else if (node.node_type == USEVAR) {
@@ -1075,6 +1110,9 @@ void visit_node(NodeReturn node, bool is_in_func) {
     else if (node.node_type == EXTERNNODE) {
         visit_extern_node(node, is_in_func);
     }
+    else if (node.node_type == RETURN) {
+        visit_return_node(node, is_in_func);
+    }
     else {
         printf("Unknown type: %d\n", node.node_type);
     }
@@ -1092,7 +1130,6 @@ void generate_ast(Token *tokens, int ntokens) {
     number_tokens = ntokens;
     setup_stack();
     codegen_setup();
-    printf("ntok = %d\n", ntokens);
     while (!compile_complete) 
         generate_and_visit_node(tokens);
     codegen_end();
