@@ -22,19 +22,19 @@ Chai is a fast, compiled dynamically typed language. Currently without any notab
 # Language Reference
 
 ## Variables
-```
+```rust
 let int_var = 10;
 let string_var = "Hello World";
 ```
 
 ## Printing to standard output
-```
+```rust
 let var = "Hello, World!";
 stdout(var);
 ```
 
 ## If statements
-```
+```rust
 let x = 7;
 if (x != 8) {
     stdout(90);
@@ -42,7 +42,7 @@ if (x != 8) {
 ```
 
 ## While loops
-```
+```rust
 let foo = 0;
 while (foo != 100) {
     stdout(foo);
@@ -51,7 +51,7 @@ while (foo != 100) {
 ```
 
 ## Lists
-```
+```rust
 let lst = [1, 2, 3, 4, 5];
 let i = 0;
 while (i != 5) {
@@ -61,7 +61,7 @@ while (i != 5) {
 ```
 
 ## Functions
-```
+```rust
 func foo(bar) {
     if (bar != 200) {
         stdout("The value of bar is not 200!");
