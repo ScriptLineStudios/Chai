@@ -1,5 +1,5 @@
 # Chai
-## Development has been temporarily stopped, until SSCB (https://github.com/ScriptLineStudios/SSCB) is ready to host the backend.
+## Development has been temporarily stopped, until SSCB (https://github.com/ScriptLineStudios/SSCB) is ready to host the updated backend.
 
 Compiler for the Chai programming language.
 Chai is a fast, compiled dynamically typed language. Currently without any notable features :(
