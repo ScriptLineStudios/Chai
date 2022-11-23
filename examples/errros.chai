@@ -1,6 +1,9 @@
-let i = 0;
-while (i != 10) {
-    stdout("wow! this lang is unsafe");
-    let ii = 0;
-    i = i + 1;
+let x = 10;
+
+func function() {
+	stdout(x);
+	return x + 1;
 }
+
+let z = function();
+stdout(z);

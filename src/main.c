@@ -38,12 +38,15 @@ char *get_name_from_file_path(char *filename) {
 
 void link_file(char *file_path) {
 	char command[1000];
-	sprintf(command, "gcc -shared -o %s.so %s.c", get_name_from_file_path(file_path), strtok(file_path, "."));
+	// sprintf(command, "gcc -shared -o %s.so %s.c", get_name_from_file_path(file_path), strtok(file_path, "."));
+	// system(command);
+	// sprintf(command, "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s.so", get_name_from_file_path(file_path));
+	// system(command);
+	// system("export LD_LIBRARY_PATH");
+	// sprintf(command, " -Xlinker %s.so ", get_name_from_file_path(file_path));
+	sprintf(command, "gcc -c -o %s.o %s.c", get_name_from_file_path(file_path), strtok(file_path, "."));
 	system(command);
-	sprintf(command, "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s.so", get_name_from_file_path(file_path));
-	system(command);
-	system("export LD_LIBRARY_PATH");
-	sprintf(command, " -Xlinker %s.so ", get_name_from_file_path(file_path));
+	sprintf(command, " -static %s.o", get_name_from_file_path(file_path));
 	link_arg = concat(link_arg, command);
 }
 

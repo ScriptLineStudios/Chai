@@ -1,8 +1,5 @@
-extern c_function;
+extern fibb;
 
-func function() {
-    let str = "this is some text written in Chai!";
-    c_function(str);
-}
-
-function();
+let x = "hello, world";
+let z = x + 1;
+fibb(z);
