@@ -17,7 +17,15 @@ bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
  /usr/include/bits/stdlib-bsearch.h /usr/include/bits/stdlib-float.h \
  /usr/include/ctype.h /usr/include/bits/endian.h \
  /usr/include/bits/endianness.h include/lexer.h include/parser.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h src/run.c
+ /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h src/run.c \
+ src/../SSCB/src/sscb_codegen.c src/../SSCB/src/../include/sscb_codegen.h \
+ src/../SSCB/src/../include/sscb_instructions.h \
+ src/../SSCB/src/../include/sscb_virtual_machine.h \
+ src/../SSCB/src/../include/codegen/intel_x86_64_linux.h \
+ src/../SSCB/src/../include/codegen/intel_x86_linux.h \
+ src/../SSCB/src/sscb_instructions.c /usr/include/assert.h \
+ src/../SSCB/src/../include/sscb_optimizer.h \
+ src/../SSCB/src/sscb_optimizer.c
 /usr/include/stdc-predef.h:
 /usr/include/stdio.h:
 /usr/include/bits/libc-header-start.h:
@@ -55,3 +63,13 @@ include/lexer.h:
 include/parser.h:
 /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h:
 src/run.c:
+src/../SSCB/src/sscb_codegen.c:
+src/../SSCB/src/../include/sscb_codegen.h:
+src/../SSCB/src/../include/sscb_instructions.h:
+src/../SSCB/src/../include/sscb_virtual_machine.h:
+src/../SSCB/src/../include/codegen/intel_x86_64_linux.h:
+src/../SSCB/src/../include/codegen/intel_x86_linux.h:
+src/../SSCB/src/sscb_instructions.c:
+/usr/include/assert.h:
+src/../SSCB/src/../include/sscb_optimizer.h:
+src/../SSCB/src/sscb_optimizer.c:

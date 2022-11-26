@@ -8,6 +8,10 @@
 
 #include "run.c"
 
+#include "../SSCB/src/sscb_codegen.c"
+#include "../SSCB/src/sscb_instructions.c"
+#include "../SSCB/src/sscb_optimizer.c"
+
 void usage(void) {
 	printf("USAGE: ./bin/comp.exe <filename> [EXTRA ARGS]\n");
 	printf("[EXTRA ARGS]:\n");

@@ -1,0 +1,3 @@
+[submodule "SSCB"]
+	path = SSCB
+	url = https://github.com/ScriptLineStudios/SSCB.git

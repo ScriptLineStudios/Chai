@@ -10,6 +10,250 @@
 #include "parser.h"
 #include "lexer.h"
 
+#include "../SSCB/include/sscb_instructions.h"
+
+static int arg_num;
+static int tok_markers;
+static bool parsing_args = false;
+static char *strings[6400000]; 
+static int number_alloced_strings;
+static int cleanups;
+
+int num_list_offset = -1;
+
+void codegen_set_parsing_args(bool value) {
+    parsing_args = value;
+}
+
+void codegen_set_arg_num(int value) {
+    arg_num = value;
+}
+
+void codegen_setup() {
+    instruction_setup();
+    FUNCTIONEXTERN(FUNCTION("printf"));
+}
+
+void codegen_end() {
+    FUNCTIONEXTERN(FUNCTION("exit"));
+    MOV(REG(ARGREGISTER1), IMM(0));
+    CALL(FUNCTION("exit"));
+
+    LABELDEF(LABEL("format"));
+    DEFINEBYTE(STRING("%s, 10, 0", "\"%d\""));
+
+    LABELDEF(LABEL("string_format"));
+    DEFINEBYTE(STRING("%s, 10, 0", "\"%s\""));
+
+    for (int i = 0; i < number_alloced_strings; i++) {
+        LABELDEF(STRING("string_%d", i));
+        DEFINEBYTE(STRING("`%s`, %d, 0", strings[i], 9));
+    }
+
+    DEFINEBYTE(STRING("section .data", 0));
+    LABELDEF(LABEL("variables"));
+    DEFINEBYTE(STRING("0", 0));
+
+    optimise_generated_instructions(1);
+    codegen_generated_instructions(INTEL_x86_64_LINUX);
+}
+
+#define NUMARGS(...) (CountOccurances(#__VA_ARGS__, ',') + 1)
+
+#define WRITE_1(instruction_type, ...) QUEUE_1(instruction_type, __VA_ARGS__);
+#define WRITE_2(instruction_type, ...) QUEUE_2(instruction_type, __VA_ARGS__);
+#define WRITE_3(instruction_type, ...) QUEUE_2(instruction_type, __VA_ARGS__);
+
+
+#define WRITE(type, num_args, ...) if (is_in_func) { switch(num_args)\
+{case 1:WRITE_1(type, __VA_ARGS__) break; case 2:WRITE_2(type, __VA_ARGS__) break;case 3:WRITE_3(type, __VA_ARGS__) break; \
+default:assert(false);} } \
+else {instruction_add(create_instruction(type, num_args, __VA_ARGS__));}
+
+void codegen_number_arg(NodeReturn node, bool is_in_func, int arg_num) {
+    Number *number = (Number*)node.node;
+    WRITE(INS_MOV, 2, REG(arg_num+11), IMM(number->value));
+}
+
+void codegen_number(NodeReturn node, bool is_in_func) {
+    if (parsing_args) {
+        codegen_number_arg(node, is_in_func, arg_num);
+        arg_num++;
+    }
+    else {
+        Number *number = (Number *)node.node;
+        WRITE(INS_PUSH, 1, IMM(number->value));
+    }
+}
+
+
+void codegen_add(NodeReturn node, bool is_in_func) {
+    Number *number = (Number *)node.node;
+    WRITE(INS_POP, 1, REG(R1));
+    WRITE(INS_POP, 1, REG(R2));
+    WRITE(INS_ADD, 2, REG(R1), REG(R1));
+    WRITE(INS_PUSH,1, REG(R1));
+}
+
+void codegen_sub(NodeReturn node, bool is_in_func) {
+    Number *number = (Number *)node.node;
+    if (parsing_args) {        
+        WRITE(INS_MOV, 2, REG(R1), REG((arg_num+11)-1));
+        WRITE(INS_MOV, 2, REG(R2), REG((arg_num+11)-2));
+        WRITE(INS_SUB, 2, REG(R2), REG(R1));
+        WRITE(INS_MOV, 2, REG((arg_num+11)-2), REG(R2));
+        arg_num -= 2;
+    }
+    else {
+        WRITE(INS_POP, 1, REG(R1));
+        WRITE(INS_POP, 1, REG(R2));
+        WRITE(INS_SUB, 2, REG(R2), REG(R1));
+        WRITE(INS_PUSH,1, REG(R2));
+    }
+    tok_markers++;
+}
+
+void codegen_mult(NodeReturn node, bool is_in_func) {}
+
+void codegen_not_equal(NodeReturn node, bool is_in_func) {
+    BinOp *bin_op = (BinOp *)node.node;
+
+    NodeReturn left = bin_op->left;
+    NodeReturn right = bin_op->right;
+
+    WRITE(INS_LABELDEF, 1, STRING("comp_%d", bin_op->stack_pos));
+    visit_node(left, is_in_func);
+    visit_node(right, is_in_func);
+
+    WRITE(INS_POP, 1, REG(R1));
+    WRITE(INS_POP, 1, REG(R2));
+    WRITE(INS_CMP, 2, REG(R1), REG(R2));
+    WRITE(INS_JNE, 1, STRING("branch_%d", bin_op->stack_pos));
+    WRITE(INS_JE,  1, STRING("end_branch_%d", bin_op->stack_pos));
+    
+    cleanups += 2;
+}
+
+void codegen_string_not_equal(NodeReturn node, bool is_in_func) {}
+
+void codegen_if(NodeReturn node, bool is_in_func) {
+    IfNode *if_node = (IfNode *)node.node;
+    WRITE(INS_LABELDEF, 1, STRING("branch_%d", if_node->stack_pos));
+}
+
+void codegen_end_node(NodeReturn node, bool is_in_func) {
+    End *end_node = (End *)node.node;
+    if (end_node->ending == IF) {
+        WRITE(INS_LABELDEF, 1, STRING("end_branch_%d", end_node->stack_pos));
+    }
+    else if (end_node->ending == WHILE) {
+        WRITE(INS_JMP, 1, STRING("comp_%d", end_node->stack_pos));
+        WRITE(INS_LABELDEF, 1, STRING("end_branch_%d", end_node->stack_pos));
+    }
+}
+void codegen_while_node(NodeReturn node, bool is_in_func) {
+    WhileNode *while_node = (WhileNode *)node.node;
+    WRITE(INS_LABELDEF, 1, STRING("branch_%d", while_node->stack_pos));
+}
+void codegen_list(NodeReturn node, bool is_in_func) {}
+void codegen_list_access(NodeReturn node, bool is_in_func) {}
+void codegen_list_reassign(NodeReturn node, bool is_in_func) {}
+void codegen_function(NodeReturn node, bool is_in_func) {}
+void codegen_function_call(NodeReturn node, bool is_in_func) {}
+void codegen_extern_node(NodeReturn node, bool is_in_func) {}
+void codegen_return(NodeReturn node, bool is_in_func) {}
+
+void codegen_var_argument(NodeReturn node, bool is_in_func, int index) {
+    //TODO: This function needs fixing 2022/11/18. okay what the fuck i have no idea what I was talking about 2022/11/26
+
+    VarAssign *var = (VarAssign *)node.node;
+    NodeReturn expr = var->expression;
+    if (expr.node_type == LIST) {
+        List *list = (List *)expr.node;
+        for (int i = 0; i < list->size; i++) {
+            WRITE(INS_POP, 1, REG(R1));
+            WRITE(INS_MOV, 2, MEM("variables", (var->index+i) * 8), REG(R1));
+            num_list_offset++;
+        }
+    }
+    else {
+        WRITE(INS_MOV, 2, MEM("variables", (var->index+num_list_offset) * 8), REG(index+11));
+    }
+}
+
+void codegen_var(NodeReturn node, bool is_in_func) {
+    VarAssign *var = (VarAssign *)node.node;
+    NodeReturn expr = var->expression;
+    if (expr.node_type == LIST) {
+        List *list = (List *)expr.node;
+        for (int i = 0; i < list->size; i++) {
+            WRITE(INS_POP, 1, REG(R1));
+            WRITE(INS_MOV, 2, MEM("variables", (var->index+i) * 8), REG(R1));
+            num_list_offset++;
+        }
+    }
+    else {
+        WRITE(INS_POP, 1, REG(R1));
+        WRITE(INS_MOV, 2, MEM("variables", (var->index+num_list_offset) * 8), REG(R1));
+     }
+}
+
+
+void codegen_var_use(NodeReturn node, bool is_in_func) {
+    UseVar *use_var = (UseVar *)node.node;
+    WRITE(INS_MOV, 2, REG(R1), MEM("variables", (use_var->index+num_list_offset) * 8))
+    if (parsing_args) {
+        WRITE(INS_MOV, 2, REG(arg_num+11), MEM("variables", (use_var->index+num_list_offset) * 8))
+        arg_num++;
+    }
+    else {
+        WRITE(INS_PUSH, 1, REG(R1));
+    }
+    tok_markers++;
+}
+
+void queue_string_data_gen(char *value) {
+    strings[number_alloced_strings] = value;
+    number_alloced_strings++;
+}
+
+void codegen_string(NodeReturn node, bool is_in_func) {
+    String *string = (String *)node.node;
+    queue_string_data_gen(string->value);
+    WRITE(INS_PUSH, 1, STRING("string_%d", number_alloced_strings - 1));
+}
+
+//Standard Library
+void codegen_stdout(NodeReturn node, NodeType type, char **var_types, bool is_in_func) {
+    WRITE(INS_POP, 1, REG(R1));
+
+    if (type == NUMBER) {
+        WRITE(INS_MOV, 2, REG(ARGREGISTER1), LABEL("format"));
+    }
+    else if (type == USEVAR) {
+        UseVar *use_var = (UseVar *)node.node;
+        if (var_types[getvariableindex(use_var->name)] == "string") { //TODO: REIMPLMENT THIS: || func_args_types[getfunctionarg(use_var->name)] == "string") {
+            WRITE(INS_MOV, 2, REG(ARGREGISTER1), LABEL("string_format"));
+        }
+        else {
+            WRITE(INS_MOV, 2, REG(ARGREGISTER1), LABEL("format"));
+        }
+    }
+    else if (type == LISTACCESS) {
+        WRITE(INS_MOV, 2, REG(ARGREGISTER1), LABEL("format"));
+    }
+    else {
+        WRITE(INS_MOV, 2, REG(ARGREGISTER1), LABEL("string_format"));
+    }
+
+    WRITE(INS_MOV, 2, REG(ARGREGISTER2), REG(R1));
+    WRITE(INS_XOR, 2, REG(R1), REG(R1));
+    WRITE(INS_CALL, 1, FUNCTION("printf"));
+}
+
+
+
+/*
 int pushes;
 FILE *file_ptr;
 
@@ -410,4 +654,4 @@ void codegen_end() {
     fprintf(file_ptr, "\nsection .data\n");
     fprintf(file_ptr, "    x db 0\n");
     fclose(file_ptr);
-}
+}*/
