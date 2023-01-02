@@ -1,190 +1,114 @@
-#include "lexer.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
-#define MAX_LINE_LEN 100
+#include "../include/lexer.h"
 
-char *parse_identifier(char *line, int start, int *end, char *res) {
-	int i = start;
+Lexer init_lexer(const char *file_path) {
+    Lexer lexer;
+    lexer.file_offset = 0;
+    lexer.file_path = file_path;
 
-	for (; i < strlen(line); i++) {
-        if (isalnum(line[i]) || line[i] == '_') {
-			strncat(res, &line[i], 1);
-        } else {
-            break;
-        }
-	}
+    lexer.file = fopen(file_path, "rb");
 
-	*end = i;
-	return res;
+    fseek(lexer.file, 0L, SEEK_END);
+    size_t file_size = ftell(lexer.file);
+    rewind(lexer.file);
+
+    lexer.buffer = (char *)malloc(file_size + 1);
+    size_t bytes_read = fread(lexer.buffer, sizeof(char), file_size, lexer.file);
+
+    fclose(lexer.file);
+
+    return lexer;
 }
 
-char *parse_string(char *line, int start, int *end, char *res) {
-	int i = start+1;
-	for (; i < strlen(line); i++) {
-        if (line[i] != '"') {
-			strncat(res, &line[i], 1);
-        } else {
-        	i++;
-            break;
-        }
-	}
-
-	*end = i;
-	return res;
+char *concat(char *dest, char src, int len) {
+    dest[len-1] = src;
+    dest = realloc(dest, sizeof(char *) * len);
+    return dest;
 }
 
-char *parse_integer(char *line, int start, int *end, char *res) {
-	int i = start;
+Token parse_identifier(Lexer *lexer) {
+    char current_char = lexer->buffer[lexer->file_offset];
 
-	for (; i < strlen(line); i++) {
-        if (isdigit(line[i])) {
-			strncat(res, &line[i], 1);
-        } else {
-            break;
-        }
-	}
+    int len = 1;
+    char *value = malloc(sizeof(char *) * len);
+    while (isalnum(current_char)) {
+        len++;
+        concat(value, current_char, len);
+        lexer->file_offset++;
+        current_char = lexer->buffer[lexer->file_offset];
+    }
+    value[0] = '\r';
+    value[len] = '\0';
+    
+    Token number_token;
+    number_token.type = TOK_IDENTIFIER;
+    number_token.value = value;
 
-	*end = i;
-	return res;
+    return number_token;
 }
 
-int lex_file(Token *tokens, FILE *file_ptr, const char *filepath) {
-    char line[MAX_LINE_LEN] = {0};
-	memset(tokens, 0, sizeof(Token) * 100);
-	int x = 0;
-	int lines = 1;
+Token parse_number(Lexer *lexer) {
+    char current_char = lexer->buffer[lexer->file_offset];
 
-    while (fgets(line, MAX_LINE_LEN, file_ptr)) {
-		int skip = 1;
-		line[strcspn(line, "\n")] = 0;
-		for (int col = 0; col < strlen(line); col+=skip, skip=1) {
-			tokens[x].position = x;
-			tokens[x].line_num = lines;
-			switch (line[col]) {
-			case ' ':
-			case '\t':
-				break;
-			case ';':
-				tokens[x].type = TOK_SEMI;
-				tokens[x].value = ";";
-				x++;
-				break;
-			case '=': 
-				if (line[col-1] != '!') {
-					tokens[x].type = TOK_EQUALS;
-					tokens[x].value = "=";
-					x++;
-					break;
-				}
-				break;
-			case '(':
-				tokens[x].type = TOK_OPEN_PARENTHESES;
-				tokens[x].value = "(";
-				x++;
-				break;
-			case ')': 
-				tokens[x].type = TOK_CLOSE_PARENTHESES;
-				tokens[x].value = ")";
-				x++;
-				break;
-			case '[':
-				tokens[x].type = TOK_OPEN_SQUARE_BRACKET;
-				tokens[x].value = "[";
-				x++;
-				break;
-			case ']': 
-				tokens[x].type = TOK_CLOSE_SQUARE_BRACKET;
-				tokens[x].value = "]";
-				x++;
-				break;
-			case ',': 
-				tokens[x].type = TOK_COMMA;
-				tokens[x].value = ",";
-				x++;
-				break;
-			case '+':
-				tokens[x].type = TOK_PLUS;
-				tokens[x].value = "+";
-				x++;
-				break;
-			case '-':
-				tokens[x].type = TOK_MINUS;
-				tokens[x].value = "-";
-				x++;
-				break;
-            case '*':
-            	tokens[x].type = TOK_MULT;
-				tokens[x].value = "*";
-				x++;
-				break;
-            case '/': 
-            	tokens[x].type = TOK_DIV;
-				tokens[x].value = "/";
-				x++;
-				break;
-			case '{': 
-            	tokens[x].type = TOK_OPEN_CURLY_BRACE;
-				tokens[x].value = "{";
-				x++;
-				break;
-			case '}': 
-            	tokens[x].type = TOK_CLOSE_CURLY_BRACE;
-				tokens[x].value = "}";
-				x++;
-				break;
-			case '!': 
-				if (line[col+1] == '=') {
-					tokens[x].type = TOK_NOT_EQUAL;
-					tokens[x].value = "!=";
-					x++;
-					break;
-				}
-				break;
-			case '"': 
-				char *_res = malloc(sizeof(char) * 100);
-				memset(_res, 0, 100);
-				tokens[x].type = TOK_STRING;
-				tokens[x].value = parse_string(line, col, &skip, _res);
-				skip -= col;
-				x++;
-				break;
+    int len = 1;
+    char *value = malloc(sizeof(char *) * len);
+    while (isdigit(current_char)) {
 
-			case '0':        
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9': {
-				char *_res = malloc(sizeof(char) * 100);
-				memset(_res, 0, 100);
-				tokens[x].type = TOK_NUMBER;
-				tokens[x].value = parse_integer(line, col, &skip, _res);
-				skip -= col;
-				x++;
-			}
-			break;
-			default: {
-				char *res = malloc(sizeof(char) * 100);
-				memset(res, 0, 100);
-				tokens[x].type = TOK_IDENT;
-				tokens[x].value = parse_identifier(line, col, &skip, res);
-				skip -= col;
-				x++;
-			}
-			break;
-			}
-			tokens[x].filepath = filepath;
-		}
-		lines++;
+        len++;
+        concat(value, current_char, len);
+        lexer->file_offset++;
+        current_char = lexer->buffer[lexer->file_offset];
+    }
+    value[0] = '\r';
+    value[len] = '\0';
+    
+    Token number_token;
+    number_token.type = TOK_NUMBER;
+    number_token.value = value;
+    return number_token;
+}
+
+Token get_next_token(Lexer *lexer) {
+    Token token;
+
+    char current_char = lexer->buffer[lexer->file_offset];
+    if isdigit(current_char) {
+        return parse_number(lexer);
+    }
+    
+    while (current_char == ' ') {
+        current_char = lexer->buffer[lexer->file_offset++];
     }
 
-    fclose(file_ptr);
-	return x;
+    switch (current_char) {
+        case ' ':
+            break;
+        case '+':
+            token.type = TOK_ADD;
+            break;
+        case '-':
+            token.type = TOK_SUB;
+            break;
+        case '/':
+            token.type = TOK_DIV;
+            break;
+        case '*':
+            token.type = TOK_MULT;
+            break;
+        case ';': 
+            token.type = TOK_SEMI;
+            break;
+        case '=': 
+            token.type = TOK_EQUAL;
+            break;
+        default:
+            return parse_identifier(lexer);
+    }
+
+    lexer->file_offset++;
+    return token;
 }

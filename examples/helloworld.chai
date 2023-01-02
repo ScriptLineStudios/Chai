@@ -1,3 +1,1 @@
-let x = "Hi!";
-stdout(x);
-stdout("hello");
+10 + 10

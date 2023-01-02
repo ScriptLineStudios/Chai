@@ -1,9 +1,0 @@
-let x = 10;
-
-func function() {
-	stdout(x);
-	return x + 1;
-}
-
-let z = function();
-stdout(z);

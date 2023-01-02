@@ -1,5 +1,0 @@
-extern fibb;
-
-let x = "hello, world";
-let z = x + 1;
-fibb(z);

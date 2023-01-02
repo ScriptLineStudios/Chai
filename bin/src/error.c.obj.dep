@@ -14,9 +14,7 @@ bin/src/error.c.obj: src/error.c /usr/include/stdc-predef.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/floatn.h \
  /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h \
  /usr/include/stdlib.h /usr/include/bits/stdlib-bsearch.h \
- /usr/include/bits/stdlib-float.h src/../include/error.h \
- src/../include/../include/parser.h src/../include/../include/lexer.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h
+ /usr/include/bits/stdlib-float.h
 /usr/include/stdc-predef.h:
 /usr/include/stdio.h:
 /usr/include/bits/libc-header-start.h:
@@ -46,7 +44,3 @@ bin/src/error.c.obj: src/error.c /usr/include/stdc-predef.h \
 /usr/include/stdlib.h:
 /usr/include/bits/stdlib-bsearch.h:
 /usr/include/bits/stdlib-float.h:
-src/../include/error.h:
-src/../include/../include/parser.h:
-src/../include/../include/lexer.h:
-/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h:
