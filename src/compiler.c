@@ -6,8 +6,5 @@
 
 void compile_file(const char *file_path) {
     Lexer lexer = init_lexer(file_path);
-    printf("%d\n", get_next_token(&lexer).type);
-    printf("%d\n", get_next_token(&lexer).type);
-    printf("%d\n", get_next_token(&lexer).type);
-//    parse_file(lexer);
+    parse_file(&lexer);
 }

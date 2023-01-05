@@ -16,6 +16,9 @@ typedef enum {
 typedef struct {
     TokenType type;
     char *value;
+    const char *filepath;
+    int line_num;
+    int position;
 } Token;
 
 typedef struct {
@@ -24,6 +27,8 @@ typedef struct {
     char *buffer;
     FILE *file;
     int file_offset;
+    int line_num;
+    int position;
 } Lexer;
 
 Lexer init_lexer(const char *file_path);

@@ -9,6 +9,8 @@ Lexer init_lexer(const char *file_path) {
     Lexer lexer;
     lexer.file_offset = 0;
     lexer.file_path = file_path;
+    lexer.line_num = 1;
+    lexer.position = 0;
 
     lexer.file = fopen(file_path, "rb");
 
@@ -31,6 +33,9 @@ char *concat(char *dest, char src, int len) {
 }
 
 Token parse_identifier(Lexer *lexer) {
+    if (lexer->file_offset > 0) {
+        lexer->file_offset--;
+    }
     char current_char = lexer->buffer[lexer->file_offset];
 
     int len = 1;
@@ -41,14 +46,13 @@ Token parse_identifier(Lexer *lexer) {
         lexer->file_offset++;
         current_char = lexer->buffer[lexer->file_offset];
     }
-    value[0] = '\r';
     value[len] = '\0';
+    value += 1;
     
-    Token number_token;
-    number_token.type = TOK_IDENTIFIER;
-    number_token.value = value;
-
-    return number_token;
+    Token tok;
+    tok.type = TOK_IDENTIFIER;
+    tok.value = value;
+    return tok;
 }
 
 Token parse_number(Lexer *lexer) {
@@ -63,8 +67,8 @@ Token parse_number(Lexer *lexer) {
         lexer->file_offset++;
         current_char = lexer->buffer[lexer->file_offset];
     }
-    value[0] = '\r';
     value[len] = '\0';
+    value += 1;
     
     Token number_token;
     number_token.type = TOK_NUMBER;
@@ -74,18 +78,25 @@ Token parse_number(Lexer *lexer) {
 
 Token get_next_token(Lexer *lexer) {
     Token token;
+    token.filepath = lexer->file_path;
+    token.position = 0;
+    token.line_num = lexer->line_num;
 
     char current_char = lexer->buffer[lexer->file_offset];
+    
+    while (current_char == ' ') {
+        current_char = lexer->buffer[lexer->file_offset];
+        lexer->file_offset++;
+    }
     if isdigit(current_char) {
         return parse_number(lexer);
     }
-    
-    while (current_char == ' ') {
-        current_char = lexer->buffer[lexer->file_offset++];
-    }
 
     switch (current_char) {
-        case ' ':
+        case '\n':
+            lexer->line_num++;
+            break;
+        case '\0':
             break;
         case '+':
             token.type = TOK_ADD;
