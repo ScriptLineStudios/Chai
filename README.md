@@ -1,5 +1,5 @@
 # Chai
-## Development has been temporarily stopped, until SSCB (https://github.com/ScriptLineStudios/SSCB) is ready to host the updated backend.
+## Currently being rewritten here: https://github.com/ScriptLineStudios/Chai/tree/complete-rewrite
 
 Compiler for the Chai programming language.
 Chai is a fast, compiled dynamically typed language. Currently without any notable features :(
