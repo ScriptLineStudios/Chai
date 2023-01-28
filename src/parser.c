@@ -6,12 +6,29 @@
 #include "../include/parser.h"
 #include "../include/lexer.h"
 #include "../include/error.h" 
+#include "../include/hashmap.h"
+#include "../include/codegen.h"
+
+
+static int num_declared_vars;
+char **variables;
 
 void visit_node(Node node);
-#define ADVANCE advance(lexer)
-#define CAST(type, name) type *name = (type *)node.node;
-#define TOK_MATCH(T, error) do{advance(lexer);if(current_token.type!=T){raise_compile_error(&current_token,error);}}while(false) //very readable
-#define STATEMENT_MATCH(name) strcmp(current_token.value, name) == 0
+
+void dump_vars() {
+    for (int i = 0; i < num_declared_vars; i++) {
+        printf("%s\n", variables[i]);
+    }
+}
+
+bool is_var(char *var_name) {
+    for (int i = 0; i < num_declared_vars; i++) {
+        if (strcmp(var_name, variables[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 Token current_token;
 
@@ -36,14 +53,39 @@ Node create_bin_op_node(Node left, Token op, Node right) {
     return return_node((void *)bin_op, BINOP);
 }
 
+Node create_var_decal_node(char *var_name, Node expression) {
+    VarDecal *var_decal = malloc(sizeof(VarDecal));
+    var_decal->var_name = var_name;
+    var_decal->expression = expression;
+
+    return return_node((void *)var_decal, VARDECAL);
+}
+
+Node create_var_reassign_node(char *var_name, Node expression) {
+    VarReassign *var_reassign = malloc(sizeof(VarReassign));
+    var_reassign->var_name = var_name;
+    var_reassign->new_expression = expression;
+
+    return return_node((void *)var_reassign, VARREASSIGN);
+}
+
 Node factor(Lexer *lexer) {
-    Number *number = malloc(sizeof(Number));
-
-    if (current_token.type == TOK_NUMBER) {
-        number->value = atoi(current_token.value);
-        ADVANCE;
-
-        return return_node((void *)number, NUMBER);
+    switch (current_token.type) {
+        case TOK_NUMBER:
+            Number *number = malloc(sizeof(Number));
+            number->value = atoi(current_token.value);
+            ADVANCE;
+            return return_node((void *)number, NUMBER);
+        case TOK_IDENTIFIER:
+            if (is_var(current_token.value)) {
+                VarAccess *var_access = malloc(sizeof(VarAccess));
+                var_access->var_name = current_token.value;
+                ADVANCE;
+                return return_node((void *)var_access, VARACCESS);
+            }
+            else {
+                raise_compile_error(&current_token, "Unknown identifier!");
+            }
     }
 }
 
@@ -63,7 +105,6 @@ Node term(Lexer *lexer) {
 
 Node expression(Lexer *lexer) {    
     ADVANCE;
-    printf("%d\n", current_token.type);
     Node left = term(lexer);
     while (current_token.type == TOK_ADD || current_token.type == TOK_SUB) {
         Token op = current_token;
@@ -79,12 +120,43 @@ Node expression(Lexer *lexer) {
 Node get_node(Lexer *lexer) {
     ADVANCE;
     if (STATEMENT_MATCH("let")) {
-        printf("Found var decleration!\n");
         TOK_MATCH(TOK_IDENTIFIER, "Expected Identifier!");
-        printf("Variable name = %s\n", current_token.value);
+        char *var_name = current_token.value;
+        TOK_MATCH(TOK_EQUAL, "Expected =");
+
+        Node var_expression = expression(lexer);
+        SEMI_MATCH;
+        return create_var_decal_node(var_name, var_expression);
     }       
+    if (is_var(current_token.value)) {
+        char *var_name = current_token.value;
+        TOK_MATCH(TOK_EQUAL, "Expected =");
+        Node new_expression = expression(lexer);
+        SEMI_MATCH;
+        return create_var_reassign_node(var_name, new_expression);
+    }
 }
 
+void visit_var_reassign_node(Node node) {
+    CAST(VarReassign, var_reassign);
+    printf("VARIABLE REASSIGNMENT: (%s)", var_reassign->var_name);
+    printf("   ");
+    visit_node(var_reassign->new_expression);
+}
+
+void visit_var_access(Node node) {
+    CAST(VarAccess, var_access);
+    printf(" %s ", var_access->var_name);
+}
+
+void visit_var_decal(Node node) {
+    CAST(VarDecal, var_decal);
+    
+    ALLOC_VAR(var_decal->var_name);
+    printf("VARIABLE DECLARATION: (%s)", var_decal->var_name);
+    printf("   ");
+    visit_node(var_decal->expression);
+}
 
 void visit_binop(Node node) {
     CAST(BinOp, bin_op);
@@ -112,17 +184,27 @@ void visit_binop(Node node) {
 
     Node right = bin_op->right;
     visit_node(right);
+    codegen_binop(node);
     printf(")"); 
 }
 
 void visit_number(Node node) {
     CAST(Number, number);
-
+    codegen_number(node);
     printf("%d", number->value);
 }
 
 void visit_node(Node node) {
     switch (node.node_type) {
+        case VARREASSIGN:
+            visit_var_reassign_node(node);
+            break;
+        case VARACCESS:
+            visit_var_access(node);
+            break;
+        case VARDECAL:
+            visit_var_decal(node);
+            break;
         case BINOP:
             visit_binop(node);
             break;
@@ -133,11 +215,13 @@ void visit_node(Node node) {
 }
 
 void create_node(Lexer *lexer) {
-    Node node = get_node(lexer);
-    visit_node(node);
+    visit_node(get_node(lexer));
     printf("\n");
 }
 
 void parse_file(Lexer *lexer) {
-    create_node(lexer); // for now we shall focus on compiling only one node :D
+    codegen_init();
+    variables = malloc(sizeof(char *) * num_declared_vars);
+    create_node(lexer);
+    codegen_end();
 }

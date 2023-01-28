@@ -1,53 +1,88 @@
 bin/src/main.c.obj: src/main.c /usr/include/stdc-predef.h \
- /usr/include/stdio.h /usr/include/bits/libc-header-start.h \
+ /usr/include/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
- /usr/include/bits/wordsize.h /usr/include/bits/timesize.h \
- /usr/include/sys/cdefs.h /usr/include/bits/long-double.h \
- /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stddef.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdarg.h \
- /usr/include/bits/types.h /usr/include/bits/typesizes.h \
- /usr/include/bits/time64.h /usr/include/bits/types/__fpos_t.h \
- /usr/include/bits/types/__mbstate_t.h \
- /usr/include/bits/types/__fpos64_t.h /usr/include/bits/types/__FILE.h \
- /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
- /usr/include/bits/stdio_lim.h /usr/include/bits/floatn.h \
- /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h \
- /usr/include/string.h /usr/include/stdlib.h \
- /usr/include/bits/stdlib-bsearch.h /usr/include/bits/stdlib-float.h \
- /usr/include/ctype.h /usr/include/bits/endian.h \
- /usr/include/bits/endianness.h src/../include/compiler.h
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/bits/timesize.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/long-double.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+ /usr/include/x86_64-linux-gnu/bits/time64.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/string.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h /usr/include/ctype.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endianness.h \
+ src/../SSCB/src/sscb_codegen.c src/../SSCB/src/../include/sscb_codegen.h \
+ src/../SSCB/src/../include/sscb_instructions.h \
+ src/../SSCB/src/../include/sscb_virtual_machine.h \
+ src/../SSCB/src/../include/codegen/intel_x86_64_linux.h \
+ src/../SSCB/src/../include/codegen/intel_x86_linux.h \
+ src/../SSCB/src/sscb_instructions.c /usr/include/assert.h \
+ src/../SSCB/src/../include/sscb_optimizer.h \
+ src/../SSCB/src/sscb_optimizer.c src/../include/compiler.h
 /usr/include/stdc-predef.h:
 /usr/include/stdio.h:
-/usr/include/bits/libc-header-start.h:
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 /usr/include/features.h:
 /usr/include/features-time64.h:
-/usr/include/bits/wordsize.h:
-/usr/include/bits/timesize.h:
-/usr/include/sys/cdefs.h:
-/usr/include/bits/long-double.h:
-/usr/include/gnu/stubs.h:
-/usr/include/gnu/stubs-64.h:
-/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stddef.h:
-/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdarg.h:
-/usr/include/bits/types.h:
-/usr/include/bits/typesizes.h:
-/usr/include/bits/time64.h:
-/usr/include/bits/types/__fpos_t.h:
-/usr/include/bits/types/__mbstate_t.h:
-/usr/include/bits/types/__fpos64_t.h:
-/usr/include/bits/types/__FILE.h:
-/usr/include/bits/types/FILE.h:
-/usr/include/bits/types/struct_FILE.h:
-/usr/include/bits/stdio_lim.h:
-/usr/include/bits/floatn.h:
-/usr/include/bits/floatn-common.h:
-/usr/include/bits/stdio.h:
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+/usr/include/x86_64-linux-gnu/bits/timesize.h:
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
+/usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
+/usr/include/x86_64-linux-gnu/bits/types.h:
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+/usr/include/x86_64-linux-gnu/bits/time64.h:
+/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
+/usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
+/usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
+/usr/include/x86_64-linux-gnu/bits/types/FILE.h:
+/usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+/usr/include/x86_64-linux-gnu/bits/floatn.h:
+/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+/usr/include/x86_64-linux-gnu/bits/stdio.h:
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:
 /usr/include/string.h:
+/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 /usr/include/stdlib.h:
-/usr/include/bits/stdlib-bsearch.h:
-/usr/include/bits/stdlib-float.h:
+/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+/usr/include/x86_64-linux-gnu/bits/stdlib.h:
 /usr/include/ctype.h:
-/usr/include/bits/endian.h:
-/usr/include/bits/endianness.h:
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
+src/../SSCB/src/sscb_codegen.c:
+src/../SSCB/src/../include/sscb_codegen.h:
+src/../SSCB/src/../include/sscb_instructions.h:
+src/../SSCB/src/../include/sscb_virtual_machine.h:
+src/../SSCB/src/../include/codegen/intel_x86_64_linux.h:
+src/../SSCB/src/../include/codegen/intel_x86_linux.h:
+src/../SSCB/src/sscb_instructions.c:
+/usr/include/assert.h:
+src/../SSCB/src/../include/sscb_optimizer.h:
+src/../SSCB/src/sscb_optimizer.c:
 src/../include/compiler.h:

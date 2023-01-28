@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "../SSCB/src/sscb_codegen.c"
+#include "../SSCB/src/sscb_instructions.c"
+#include "../SSCB/src/sscb_optimizer.c"
+
 #include "../include/compiler.h"
 
 void usage(void) {

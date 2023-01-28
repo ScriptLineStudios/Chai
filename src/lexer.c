@@ -33,43 +33,33 @@ char *concat(char *dest, char src, int len) {
 }
 
 Token parse_identifier(Lexer *lexer) {
-    if (lexer->file_offset > 0) {
-        lexer->file_offset--;
-    }
     char current_char = lexer->buffer[lexer->file_offset];
-
     int len = 1;
-    char *value = malloc(sizeof(char *) * len);
+    char *value = malloc(sizeof(char) * len);
     while (isalnum(current_char)) {
+        value = concat(value, current_char, len);
         len++;
-        concat(value, current_char, len);
         lexer->file_offset++;
         current_char = lexer->buffer[lexer->file_offset];
     }
-    value[len] = '\0';
-    value += 1;
-    
-    Token tok;
-    tok.type = TOK_IDENTIFIER;
-    tok.value = value;
-    return tok;
+    value[len-1] = '\0';
+    Token ident_token;
+    ident_token.type = TOK_IDENTIFIER;
+    ident_token.value = value;
+    return ident_token;
 }
 
 Token parse_number(Lexer *lexer) {
     char current_char = lexer->buffer[lexer->file_offset];
-
     int len = 1;
-    char *value = malloc(sizeof(char *) * len);
+    char *value = malloc(sizeof(char) * len);
     while (isdigit(current_char)) {
-
+        value = concat(value, current_char, len);
         len++;
-        concat(value, current_char, len);
         lexer->file_offset++;
         current_char = lexer->buffer[lexer->file_offset];
     }
     value[len] = '\0';
-    value += 1;
-    
     Token number_token;
     number_token.type = TOK_NUMBER;
     number_token.value = value;
@@ -83,21 +73,17 @@ Token get_next_token(Lexer *lexer) {
     token.line_num = lexer->line_num;
 
     char current_char = lexer->buffer[lexer->file_offset];
-    
-    while (current_char == ' ') {
-        current_char = lexer->buffer[lexer->file_offset];
+
+    while (current_char==' '||current_char=='\n') {
         lexer->file_offset++;
+        current_char = lexer->buffer[lexer->file_offset];
     }
-    if isdigit(current_char) {
+
+    if (isdigit(current_char)) {
         return parse_number(lexer);
     }
 
     switch (current_char) {
-        case '\n':
-            lexer->line_num++;
-            break;
-        case '\0':
-            break;
         case '+':
             token.type = TOK_ADD;
             break;
@@ -123,3 +109,52 @@ Token get_next_token(Lexer *lexer) {
     lexer->file_offset++;
     return token;
 }
+
+// Token get_next_token(Lexer *lexer) {
+//     Token token;
+//     token.filepath = lexer->file_path;
+//     token.position = 0;
+//     token.line_num = lexer->line_num;
+
+//     char current_char = lexer->buffer[lexer->file_offset];
+    
+//     while (current_char == ' ' || current_char == '\n') {
+//         current_char = lexer->buffer[lexer->file_offset];
+//         lexer->file_offset++;
+//     }
+
+//     printf("looking at: %c %d\n", current_char, lexer->file_offset);
+//     if isdigit(current_char) {
+//         return parse_number(lexer);
+//     }
+
+//     switch (current_char) {
+//         case '\0':
+//             break;
+//         case '+':
+//             token.type = TOK_ADD;
+//             break;
+//         case '-':
+//             token.type = TOK_SUB;
+//             break;
+//         case '/':
+//             token.type = TOK_DIV;
+//             break;
+//         case '*':
+//             token.type = TOK_MULT;
+//             break;
+//         case ';': 
+//             token.type = TOK_SEMI;
+//             break;
+//         case '=': 
+//             token.type = TOK_EQUAL;
+//             break;
+//         default:
+//             //printf("token does not match! looking for identifier\n");
+//             return parse_identifier(lexer);
+//     }
+
+//     lexer->file_offset++;
+//     return token;
+// }
+
