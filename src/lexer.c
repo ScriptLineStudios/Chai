@@ -69,7 +69,7 @@ Token parse_number(Lexer *lexer) {
 Token get_next_token(Lexer *lexer) {
     Token token;
     token.filepath = lexer->file_path;
-    token.position = 0;
+    token.position = lexer->file_offset;
     token.line_num = lexer->line_num;
 
     char current_char = lexer->buffer[lexer->file_offset];
@@ -100,7 +100,41 @@ Token get_next_token(Lexer *lexer) {
             token.type = TOK_SEMI;
             break;
         case '=': 
-            token.type = TOK_EQUAL;
+            if ((lexer->buffer[lexer->file_offset+1]) == '=') {
+                token.type = TOK_EQUAL_EQUAL;
+                lexer->file_offset += 2;
+            }
+            else {
+                token.type = TOK_EQUAL;
+            }
+            break;
+        case '(': 
+            token.type = TOK_OPEN_BRACKET;
+            break;
+        case ')': 
+            token.type = TOK_CLOSE_BRACKET;
+            break;
+        case '{':
+            token.type = TOK_OPEN_CURLY_BRACE;
+            break;
+        case '}':
+            token.type = TOK_CLOSE_CURLY_BRACE;
+            break;
+        case '"':
+            lexer->file_offset++;
+            current_char = lexer->buffer[lexer->file_offset];
+            int length = 0;
+            char *string_value = malloc(sizeof(char) * length);
+            while (current_char != '"') {
+                length++;
+                string_value = realloc(string_value, sizeof(char) * length);
+                string_value[length - 1] = current_char;
+                lexer->file_offset++;
+                current_char = lexer->buffer[lexer->file_offset];
+            }
+            string_value[length-1] = '\0';
+            token.type = TOK_STRING;
+            token.value = string_value;
             break;
         default:
             return parse_identifier(lexer);

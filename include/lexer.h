@@ -11,6 +11,12 @@ typedef enum {
     TOK_NUMBER = 6,
     TOK_SEMI = 7,
     TOK_EQUAL = 8,
+    TOK_OPEN_BRACKET = 9,
+    TOK_CLOSE_BRACKET = 10,
+    TOK_EQUAL_EQUAL = 11,
+    TOK_OPEN_CURLY_BRACE = 12,
+    TOK_CLOSE_CURLY_BRACE = 13,
+    TOK_STRING = 14,
 } TokenType;
 
 typedef struct {
