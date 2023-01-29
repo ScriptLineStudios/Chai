@@ -232,6 +232,7 @@ void visit_var_reassign_node(Node node) {
     printf("   ");
     visit_node(var_reassign->new_expression);
     codegen_var_reassign(node);
+    
 }
 
 void visit_var_access(Node node) {
