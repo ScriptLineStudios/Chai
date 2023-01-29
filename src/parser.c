@@ -100,6 +100,7 @@ Node create_if_node(Node *nodes, int num_nodes, Node expr, int index) {
 
     return return_node((void *)if_node, IF);
 }
+Node expression(Lexer *lexer);
 
 Node factor(Lexer *lexer) {
     switch (current_token.type) {
@@ -121,12 +122,30 @@ Node factor(Lexer *lexer) {
                 VarAccess *var_access = malloc(sizeof(VarAccess));
                 var_access->var_name = current_token.value;
                 var_access->index = num_declared_vars;
+                var_access->type = current_token.type;
                 ADVANCE;
                 return return_node((void *)var_access, VARACCESS);
             }
             else {
                 raise_compile_error(&current_token, "Unknown identifier!");
             }
+        case TOK_OPEN_BRACKET:
+            Node new_expr = expression(lexer);
+            TOK_MATCH_NO_ADVANCE(TOK_CLOSE_BRACKET, "Expected )");
+            ADVANCE;
+            return new_expr;
+        case TOK_BANG:
+            Node expr = expression(lexer);
+            Unary *unary = malloc(sizeof(Unary));
+            unary->expression = expr;
+            unary->type = TOK_BANG;
+            return return_node((void *)unary, UNARY);
+        case TOK_SUB:
+            Node expr_sub = expression(lexer);
+            Unary *unary_sub = malloc(sizeof(Unary));
+            unary_sub->expression = expr_sub;
+            unary_sub->type = TOK_SUB;
+            return return_node((void *)unary_sub, UNARY);
     }
 }
 
@@ -212,6 +231,7 @@ void visit_var_reassign_node(Node node) {
     printf("VARIABLE REASSIGNMENT: (%s)", var_reassign->var_name);
     printf("   ");
     visit_node(var_reassign->new_expression);
+    codegen_var_reassign(node);
 }
 
 void visit_var_access(Node node) {
@@ -295,6 +315,19 @@ void visit_string(Node node) {
     codegen_string(node);
 }
 
+void visit_unary(Node node) {
+    CAST(Unary, unary);
+    switch (unary->type) {
+        case TOK_BANG:
+            printf("!");
+        case TOK_SUB:
+            printf("-");
+    }
+    visit_node(unary->expression);
+    codegen_unary(node);
+}
+
+
 void visit_node(Node node) {
     switch (node.node_type) {
         case VARREASSIGN:
@@ -320,6 +353,9 @@ void visit_node(Node node) {
             break;
         case STRING:
             visit_string(node);
+            break;
+        case UNARY:
+            visit_unary(node);
             break;
         default:
             printf("unknown node type: %d\n", node.node_type);

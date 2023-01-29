@@ -26,9 +26,11 @@ bin/src/codegen.c.obj: src/codegen.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib.h src/../include/codegen.h \
- src/../include/../include/parser.h src/../include/../include/lexer.h \
- src/../include/parser.h src/../SSCB/include/sscb_codegen.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h /usr/include/assert.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
+ src/../include/codegen.h src/../include/../include/parser.h \
+ src/../include/../include/lexer.h src/../include/parser.h \
+ src/../SSCB/include/sscb_codegen.h \
  src/../SSCB/include/sscb_instructions.h \
  src/../SSCB/include/sscb_virtual_machine.h \
  src/../SSCB/include/sscb_optimizer.h
@@ -63,6 +65,8 @@ bin/src/codegen.c.obj: src/codegen.c /usr/include/stdc-predef.h \
 /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 /usr/include/x86_64-linux-gnu/bits/stdlib.h:
+/usr/include/assert.h:
+/usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h:
 src/../include/codegen.h:
 src/../include/../include/parser.h:
 src/../include/../include/lexer.h:

@@ -23,6 +23,7 @@ typedef enum {
     PRINT = 6,
     IF = 7,
     STRING = 8,
+    UNARY = 9
 } NodeType;
 
 typedef struct {
@@ -49,6 +50,7 @@ typedef struct {
 typedef struct {
     char *var_name;
     int index;
+    TokenType type;
 } VarAccess;
 
 typedef struct {
@@ -72,5 +74,10 @@ typedef struct {
     char *value;
     int index;
 } String;
+
+typedef struct {
+    Node expression;
+    TokenType type;
+} Unary;
 
 #endif

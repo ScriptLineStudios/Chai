@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <stdbool.h>
 #include "../include/codegen.h"
 #include "../include/parser.h"
 #include "../SSCB/include/sscb_codegen.h"
@@ -135,9 +137,27 @@ void codegen_string(Node node) {
 
 void codegen_print(Node node) {
     CAST(Print, print);
-
     POP(REG(R1));
-    MOV(REG(ARGREGISTER1), LABEL("format"));
+    switch (print->expression.node_type) {
+        case STRING:
+            MOV(REG(ARGREGISTER1), LABEL("str_format"));
+            break;
+        case VARACCESS:
+            int type = (int)((VarAccess*)print->expression.node)->type;
+            printf("here %d\n", type);
+            if (type == 1) {
+                MOV(REG(ARGREGISTER1), LABEL("str_format"));
+            }
+            else {
+                printf("%d\n", type);
+                assert(false);
+            }
+            break;
+        default:   
+            printf("%d\n", print->expression.node_type);
+            MOV(REG(ARGREGISTER1), LABEL("format"));
+            break;
+    }
     MOV(REG(ARGREGISTER2), REG(R1));
     XOR(REG(R1), REG(R1));
     CALL(FUNCTION("printf"));
@@ -148,3 +168,40 @@ void codegen_var_access(Node node) {
     MOV(REG(R1), MEM("variables", (var_access->index-1)*8));
     PUSH(REG(R1));
 }
+
+int num_unaries = -1;
+
+void codegen_unary(Node node) {
+    num_unaries++;
+    CAST(Unary, unary);
+    switch (unary->type) {
+        case TOK_BANG:
+            POP(REG(R1));
+            CMP(REG(R1), IMM(1));
+            JE(STRING("invert_1_%d", num_unaries));
+            JNE(STRING("invert_0_%d", num_unaries));
+
+            LABELDEF(STRING("invert_0_%d", num_unaries));
+            MOV(REG(R1), IMM(1));
+            JMP(STRING("end_%d", num_unaries));
+
+            LABELDEF(STRING("invert_1_%d", num_unaries));
+            MOV(REG(R1), IMM(0));
+
+            LABELDEF(STRING("end_%d", num_unaries));
+            PUSH(REG(R1));
+            break;
+        case TOK_SUB:
+            POP(REG(R1));
+            MOV(REG(R2), IMM(0));
+            SUB(REG(R2), REG(R1));
+            PUSH(REG(R2));
+    }
+}
+
+codegen_var_reassign(Node node) {
+    CAST(VarReassign, var_reassign);
+
+    POP(REG(R1));
+    MOV(MEM("variables", (var_reassign->index)*8 - 8), REG(R1));
+}   

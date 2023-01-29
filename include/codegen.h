@@ -16,5 +16,8 @@ void codegen_print(Node node);
 void codegen_var_access(Node node);
 void codegen_if(Node node);
 void codegen_string(Node node);
+void codegen_unary(Node node);
+void codegen_var_reassign(node);
+
 
 #endif

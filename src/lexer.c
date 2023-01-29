@@ -108,6 +108,15 @@ Token get_next_token(Lexer *lexer) {
                 token.type = TOK_EQUAL;
             }
             break;
+        case '!': 
+            if ((lexer->buffer[lexer->file_offset+1]) == '=') {
+                token.type = TOK_BANG_EQUAL;
+                lexer->file_offset += 2;
+            }
+            else {
+                token.type = TOK_BANG;
+            }
+            break;
         case '(': 
             token.type = TOK_OPEN_BRACKET;
             break;
