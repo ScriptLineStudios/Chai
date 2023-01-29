@@ -2,7 +2,7 @@
 ## Currently being rewritten here: https://github.com/ScriptLineStudios/Chai/tree/complete-rewrite
 
 Compiler for the Chai programming language.
-Chai is a fast, compiled dynamically typed language. Currently without any notable features :(
+Chai is a fast, compiled dynamically typed language.
 
 # Compilation Targets
 
